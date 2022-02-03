@@ -48,11 +48,14 @@ while True:
 	ax[1].grid()
 	ax[1].legend()
 
-	imgname = "public/images/anttun" + str(THIS_ANTENNA) + ".png"
+	imgdir = "public/images/"
 
-	plt.savefig(imgname, bbox_inches = "tight")
+	imgname = "anttun" + str(THIS_ANTENNA) + ".png"
+	tempimgname = "t_anttun" + str(THIS_ANTENNA) + ".png"
 
-	img = cv2.imread(imgname)
+	plt.savefig(imgdir + tempimgname, bbox_inches = "tight")
+
+	img = cv2.imread(imgdir + tempimgname)
 	shape = list(img.shape)
 	shape[1] = int(shape[1] / 20)
 	colorrect = np.ones(shape, dtype=int) * 255
@@ -104,7 +107,7 @@ while True:
 	colorrect[ystart : yend, xend0 : xend1, 2] = int(R_VAL_1)
 
 	img = np.concatenate((img, colorrect), axis = 1)
-	cv2.imwrite(imgname, img)
+	cv2.imwrite(imgdir + imgname, img)
 
 	#np.savetxt("public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
 
