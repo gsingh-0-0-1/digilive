@@ -34,7 +34,7 @@ function randomuniform(center = 0.5, scale = 1){
 
 function bandpass_simulated({chanidx, centerchan = (SPECTRA_CHANS + 1) / 2, height = 40, min = 60, noiseamp = 1}){
 	let x = chanidx - centerchan
-	let baseval = height * Math.pow(Math.E, -Math.pow(x / centerchan, 6)) + min
+	let baseval = height * Math.pow(Math.E, -Math.pow(x / (centerchan * 0.75), 6)) + min
 	baseval = baseval + randomuniform(0, noiseamp)
 	return baseval
 }
@@ -49,7 +49,7 @@ function reGenerateADCSnapshot(){
 		var subarr2 = []
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr1)
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr2)
-		var std = (randomuniform() * 15) + 3
+		var std = (randomuniform(16, 12))
 		for (var i = 0; i < ADC_SAMPLES; i++){
 			for (var pol = 0; pol < 2; pol++){
 				SAMPLE_ADC_SNAPSHOTS[j][pol].push(randomnormal(0, std))
@@ -69,7 +69,18 @@ function reGenerateSpectra(){
 		SAMPLE_SPECTRA[j].push(subarr2)
 		for (var i = 0; i < SPECTRA_CHANS; i++){
 			for (var pol = 0; pol < 2; pol++){
-				SAMPLE_SPECTRA[j][pol].push(bandpass_simulated({chanidx : i + 1, noiseamp : 0.2}))
+				if (pol == 0){
+					SAMPLE_SPECTRA[j][pol].push(bandpass_simulated({chanidx : i + 1, noiseamp : 1.3}))
+				}
+				if (pol == 1){
+					SAMPLE_SPECTRA[j][pol].push(bandpass_simulated({chanidx : i + 1, noiseamp : 1.3, height: 35, min: 62.5}))
+				}
+
+				//randomly add some spikes
+				if (randomuniform() > 0.999){
+					let randpol = Math.round(randomuniform())
+					SAMPLE_SPECTRA[j][randpol][SAMPLE_SPECTRA[j][randpol].length - 1] += randomuniform(30, 15)
+				}
 			}
 		}
 	}

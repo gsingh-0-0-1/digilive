@@ -2,58 +2,113 @@ import numpy as np
 import matplotlib.pyplot as plt
 import requests
 import time
+import sys
+import cv2
 
-N_ANTENNAE = 40
+THIS_ANTENNA = int(sys.argv[1])
 
-print(time.time())
+fig, ax = plt.subplots(1, 2, 
+				gridspec_kw={
+                   'width_ratios': [2.5, 1]
+                   },
+                figsize = (17, 4))
 
-for i in range(1):
-	SPECTRA = []
-	ADC_SAMPLES = []
+IDEAL_ADC_STD = 16
+ADC_MAX_DEV = 6
 
-	for i in range(N_ANTENNAE):
-		req = requests.get("http://0.0.0.0:9000/spectrum/" + str(i))
-		data = req.text.split(":")
-		SPECTRA.append([[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]])
+while True:
+
+	req = requests.get("http://0.0.0.0:9000/spectrum/" + str(THIS_ANTENNA))
+	data = req.text.split(":")
+	SPECTRA = [[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]]
 
 	SPECTRA = np.array(SPECTRA)
 
-	for i in range(N_ANTENNAE):
-		req = requests.get("http://0.0.0.0:9000/adcsnapshot/" + str(i))
-		data = req.text.split(":")
-		ADC_SAMPLES.append([[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]])
+	req = requests.get("http://0.0.0.0:9000/adcsnapshot/" + str(THIS_ANTENNA))
+	data = req.text.split(":")
+	ADC_SAMPLES = [[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]]
 
-	fig, ax = plt.subplots(1, 2, 
-					gridspec_kw={
-	                   'width_ratios': [3.5, 1]
-	                   },
-	                figsize = (17, 5))
+	adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
 
-	spec1, = ax[0].plot([1], color = 'blue', label = 'X-pol')
-	spec2, = ax[0].plot([1], color = 'red', label = 'Y-pol')
 
+	ax[0].plot(SPECTRA[0], color = 'blue', label = 'X-pol')
+	ax[0].plot(SPECTRA[1], color = 'red', label = 'Y-pol')
+	ax[0].set_title("Simulated Ant-Tun " + str(THIS_ANTENNA), fontsize = 20)
 	ax[0].set_xlabel("Channel")
 	ax[0].set_ylabel("Power (dB)")
+	ax[0].grid()
 	ax[0].legend()
 
 
-	for i in range(SPECTRA.shape[0]):
+	ax[1].set_xlabel("ADC Values")
+	ax[1].set_ylabel("Counts")
+	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5, label = "X-pol-std = " + str(round(adc_std[0], 3)))
+	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y-pol-std = " + str(round(adc_std[1], 3)))
+	ax[1].set_xlim([-127, 127])
+	ax[1].grid()
+	ax[1].legend()
 
-		spec1.set_data(np.arange(0, SPECTRA.shape[-1], 1), SPECTRA[i][0])
-		spec2.set_data(np.arange(0, SPECTRA.shape[-1], 1), SPECTRA[i][1])
-		ax[0].set_title("Simulated Ant-Tun " + str(i))
-		ax[0].relim()
-		ax[0].autoscale_view(True,True,True) 
+	imgname = "public/images/anttun" + str(THIS_ANTENNA) + ".png"
 
-		ax[1].set_xlabel("ADC Values")
-		ax[1].set_ylabel("Counts")
-		ax[1].hist(ADC_SAMPLES[i][0], 50, color = 'blue', rwidth = 0.5)
-		ax[1].hist(ADC_SAMPLES[i][1], 50, color = 'red', rwidth = 0.5)
+	plt.savefig(imgname, bbox_inches = "tight")
 
-		plt.savefig("ant" + str(i) + ".png")
+	img = cv2.imread(imgname)
+	shape = list(img.shape)
+	shape[1] = int(shape[1] / 20)
+	colorrect = np.ones(shape, dtype=int) * 255
 
-		ax[1].cla()
+	#indices of the rectange we want to color in
+	ystart = 0
+	yend = shape[0]
 
-	plt.clf()
+	#two different rectangles, one for each polarization
+	xstart = int(2.5 * shape[1] / 10)
+	xend0 = int(5 * shape[1] / 10)
+	xend1 = int(7.5 * shape[1] / 10)
 
-print(time.time())
+	deviation_0 = abs(adc_std[0] - IDEAL_ADC_STD)
+	deviation_1 = abs(adc_std[1] - IDEAL_ADC_STD)
+
+	#we have no use for deviation fractions greater than 1 - we can cap them there
+	dev_frac_0 = min(deviation_0 / ADC_MAX_DEV, 1)
+	dev_frac_1 = min(deviation_1 / ADC_MAX_DEV, 1)
+
+	#start out at green
+	B_VAL_0 = 0
+	B_VAL_1 = 0
+
+	G_VAL_0 = 255
+	G_VAL_1 = 255
+
+	R_VAL_0 = 0
+	R_VAL_1 = 0
+
+	#work our way towards red based on the deviation
+	#if the deviation fraction is 0.5, we should saturate the red, which will create a yellow color
+	R_VAL_0 += min(1, 2 * dev_frac_0) * 255
+	R_VAL_1 += min(1, 2 * dev_frac_1) * 255
+
+	if dev_frac_0 > 0.5:
+		G_VAL_0 -= min(1, 2 * (dev_frac_0 - 0.5)) * 255
+
+	if dev_frac_1 > 0.5:
+		G_VAL_1 -= min(1, 2 * (dev_frac_1 - 0.5)) * 255
+
+
+	colorrect[ystart : yend, xstart : xend0, 0] = int(B_VAL_0)
+	colorrect[ystart : yend, xstart : xend0, 1] = int(G_VAL_0)
+	colorrect[ystart : yend, xstart : xend0, 2] = int(R_VAL_0)
+
+	colorrect[ystart : yend, xend0 : xend1, 0] = int(B_VAL_1)
+	colorrect[ystart : yend, xend0 : xend1, 1] = int(G_VAL_1)
+	colorrect[ystart : yend, xend0 : xend1, 2] = int(R_VAL_1)
+
+	img = np.concatenate((img, colorrect), axis = 1)
+	cv2.imwrite(imgname, img)
+
+	#np.savetxt("public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
+
+	ax[0].cla()
+	ax[1].cla()
+
+	time.sleep(1)

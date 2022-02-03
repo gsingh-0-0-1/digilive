@@ -3,88 +3,73 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 	<title>Digi-Live</title>
-	<script>
-		// Load the Visualization API and the corechart package.
-		google.charts.load('current', {'packages':['corechart', 'line']});
-	</script>
+	<style>
+
+	</style>
 </head>
 <body>
+</body>
+<script type="text/javascript">
+	var NUM_ANTENNAS = 6;
 
-	<!--<div id="chart_1"></div>-->
+	var IMAGE_WIDTH = 50;
+	var BORDER_WIDTH = 1;
 
-	<script type="text/javascript">
+	function checkSrc(el){
+		var isLoaded = el.complete && el.naturalHeight !== 0;
+		if (!isLoaded){
+			resetSrc(el)
+		}
+	}
 
-		function updateChartData(n){
-			// Set chart options
-			var options = {title : 'Sample Antenna ' + String(n) + ": Spectrum",
-						width : 800,
-						height : 400,
-						hAxis: {
-							title : 'Channel',
-							viewWindow: {
-								min : 0,
-								max : 4096
-							}
-						},
-						vAxis: {
-							title : 'Power (dB)',
-						}
-					};
+	function getImage(n){
+		return document.getElementById("anttun" + String(n))
+	}
 
-			var req = new XMLHttpRequest;
-			req.open("GET", "spectrum/" + String(n))
-			req.send()
-			req.onreadystatechange = function(){
-				if (this.readyState == 4 && this.status == 200){
-					var text = this.responseText
-					var pol1 = text.split(":")[0]
-					var pol2 = text.split(":")[1]
-					pol1 = pol1.split("_")
-					pol2 = pol2.split("_")
+	function resetSrc(el){
+		var current_src = el.src
+		var new_src = current_src.split("?")[0] + "?t=" + new Date().getTime()
+		el.src = new_src
+		setTimeout(function(){
+			checkSrc(el)
+		}, 200)
 
-					// Create the data table.
-					var data = new google.visualization.DataTable();
-					data.addColumn('number', 'Channel')
-					data.addColumn('number', 'X-pol');
-					data.addColumn('number', 'Y-pol');
-
-					for (var chanidx = 0; chanidx < pol1.length; chanidx++){
-						var values = [chanidx, pol1[chanidx] * 1, pol2[chanidx] * 1]
-						data.addRow(values)
-					}
-					// Instantiate and draw our chart, passing in some options.
-					window['chart' + String(n)].draw(data, google.charts.Line.convertOptions(options));
-				}
+		var req = new XMLHttpRequest();
+		req.open("GET", "data/std_anttun_" + el.id.replace("anttun", "") + ".txt")
+		req.send()
+		req.onreadystatechange = function(){
+			if (this.readyState == 4 && this.status == 200){
+				let text = this.responseText.split("\n")
 			}
 		}
+	}
 
-		function drawChart(n) {
+	//create image elements
+	for (var i = 0; i < NUM_ANTENNAS; i++){
+		var el = document.createElement("img")
+		el.id = "anttun" + String(i + 1)
+		el.style.border = String(BORDER_WIDTH) + "px solid black"
+		document.body.appendChild(el)
+	}
 
-			var chart = new google.charts.Line(document.getElementById('chart_' + String(n)));
-			window['chart' + String(n)] = chart
+	var parser = new DOMParser();
 
-			updateChartData(n)
+	//set image sources
+	for (var i = 0; i < NUM_ANTENNAS; i++){
+		var el = getImage(i + 1)
+		el.src = "images/anttun" + String(i + 1) + ".png?t=" + new Date().getTime()
+		el.style.position = "relative"
+		el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
+	}
 
+	function resetSrcs(){
+		for (var i = 0; i < NUM_ANTENNAS; i++){
+			var el = getImage(i + 1)
+			resetSrc(el)
 		}
+	}
 
-		var ndivs = 1
-
-		for (var n = 1; n < ndivs + 1; n++){
-			var d = document.createElement('div')
-			d.id = 'chart_' + String(n)
-			document.body.appendChild(d)
-		}
-
-		for (let n = 1; n < ndivs + 1; n++){
-			google.charts.setOnLoadCallback(function(){
-				drawChart(n + 1 - 1)
-			});
-		}
-
-		// Set a callback to run when the Google Visualization API is loaded.
-	</script>
-	
-</body>
+	setInterval(resetSrcs, 5000)
+</script>
 </html>
