@@ -34,15 +34,6 @@
 		setTimeout(function(){
 			checkSrc(el)
 		}, 200)
-
-		var req = new XMLHttpRequest();
-		req.open("GET", "data/std_anttun_" + el.id.replace("anttun", "") + ".txt")
-		req.send()
-		req.onreadystatechange = function(){
-			if (this.readyState == 4 && this.status == 200){
-				let text = this.responseText.split("\n")
-			}
-		}
 	}
 
 	//create image elements
