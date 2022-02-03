@@ -49,10 +49,11 @@ function reGenerateADCSnapshot(){
 		var subarr2 = []
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr1)
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr2)
-		var std = (randomuniform(16, 12))
+		var std = [(randomuniform(16, 12))]
+		std.push(std[0] + randomuniform(0, 3))
 		for (var i = 0; i < ADC_SAMPLES; i++){
 			for (var pol = 0; pol < 2; pol++){
-				SAMPLE_ADC_SNAPSHOTS[j][pol].push(randomnormal(0, std))
+				SAMPLE_ADC_SNAPSHOTS[j][pol].push(randomnormal(0, std[pol]))
 			}
 		}
 	}
