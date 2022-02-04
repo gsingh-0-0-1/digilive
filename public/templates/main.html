@@ -36,6 +36,13 @@
 		}, 200)
 	}
 
+	function resetSrcs(){
+		for (var i = 0; i < NUM_ANTENNAS; i++){
+			var el = getImage(i + 1)
+			resetSrc(el)
+		}
+	}
+
 	var req = new XMLHttpRequest;
 	req.open("GET", "/totalantennae")
 	req.send()
@@ -54,21 +61,12 @@
 				document.body.appendChild(el)
 			}
 
-			var parser = new DOMParser();
-
 			//set image sources
 			for (var i = 0; i < NUM_ANTENNAS; i++){
 				var el = getImage(i + 1)
 				el.src = "images/anttun" + String(i + 1) + ".png?t=" + new Date().getTime()
 				el.style.position = "relative"
 				el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
-			}
-
-			function resetSrcs(){
-				for (var i = 0; i < NUM_ANTENNAS; i++){
-					var el = getImage(i + 1)
-					resetSrc(el)
-				}
 			}
 
 			setInterval(resetSrcs, 5000)
