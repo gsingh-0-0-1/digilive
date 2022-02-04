@@ -9,17 +9,34 @@
 		// Load the Visualization API and the corechart package.
 		google.charts.load('current', {'packages':['corechart', 'line']});
 	</script>
+	<style>
+		body{
+			background-color: #888;
+		}
+	</style>
 </head>
 <body>
 
-	<!--<div id="chart_1"></div>-->
+	<div style="position: fixed; left: 2%; top: 50%; transform: translate(0%, -50%);" id="chart"></div>
+	<div style="position: fixed; left: 55%; top: 50%; transform: translate(0%, -50%)" id="hist"></div>
+
+	<button style="position: fixed; left: 25%; top: 10%; transform: translate(-50%, -50%); font-family: Courier; padding: 2% 2%; border: none" id="xpolbutton">
+		X-pol ADC Values
+	</button>
+
+	<button style="position: fixed; left: 75%; top: 10%; transform: translate(-50%, -50%); font-family: Courier; padding: 2% 2%; border: none" id="ypolbutton">
+		Y-pol ADC Values
+	</button>
 
 	<script type="text/javascript">
 
-		function updateChartData(n){
+		var THIS_ID = window.location.href.split("/")
+		THIS_ID = THIS_ID[THIS_ID.length - 1] * 1
+
+		function updateChartData(){
 			// Set chart options
-			var options = {title : 'Sample Antenna ' + String(n) + ": Spectrum",
-						width : 800,
+			var options = {title : 'Sample Antenna ' + String(THIS_ID) + ": Spectrum",
+						width : 700,
 						height : 400,
 						hAxis: {
 							title : 'Channel',
@@ -34,7 +51,7 @@
 					};
 
 			var req = new XMLHttpRequest;
-			req.open("GET", "spectrum/" + String(n))
+			req.open("GET", "/spectrum/" + String(THIS_ID))
 			req.send()
 			req.onreadystatechange = function(){
 				if (this.readyState == 4 && this.status == 200){
@@ -55,33 +72,101 @@
 						data.addRow(values)
 					}
 					// Instantiate and draw our chart, passing in some options.
-					window['chart' + String(n)].draw(data, google.charts.Line.convertOptions(options));
+					window['chart'].draw(data, google.charts.Line.convertOptions(options));
 				}
 			}
 		}
 
-		function drawChart(n) {
+		function updateAdcData(){
+			var options = {title : 'Sample Antenna ' + String(THIS_ID) + ": ADC Values Histogram",
+						width : 600,
+						height : 400,
+						hAxis: {
+							title : 'Value',
+							viewWindow: {
+								min : -127,
+								max : 127
+							}
+						},
+						vAxis: {
+							title : 'Count',
+						}
+					};
 
-			var chart = new google.charts.Line(document.getElementById('chart_' + String(n)));
-			window['chart' + String(n)] = chart
+			var req = new XMLHttpRequest;
+			req.open("GET", "/adcsnapshot/" + String(THIS_ID))
+			req.send()
+			req.onreadystatechange = function(){
+				if (this.readyState == 4 && this.status == 200){
+					var text = this.responseText
 
-			updateChartData(n)
+					var stds = text.split("|")[0]
+					var stds = stds.split("_")
+
+					var values = text.split("|")[1]
+					var pol1 = values.split(":")[0]
+					var pol2 = values.split(":")[1]
+
+					pol1 = pol1.split("_")
+					pol2 = pol2.split("_")
+
+					// Create the data table.
+					var data = new google.visualization.DataTable();
+					data.addColumn('number', 'X-pol (STD ' + String(Math.round(stds[0] * 10000) / 10000) + ')');
+					data.addColumn('number', 'Y-pol (STD ' + String(Math.round(stds[1] * 10000) / 10000) + ')');
+
+					for (var chanidx = 0; chanidx < pol1.length; chanidx++){
+						var values = [pol1[chanidx] * 1, pol2[chanidx] * 1]
+						data.addRow(values)
+					}
+					// Instantiate and draw our chart, passing in some options.
+					window['hist'].draw(data, options);
+				}
+			}
 
 		}
 
-		var ndivs = 1
-
-		for (var n = 1; n < ndivs + 1; n++){
-			var d = document.createElement('div')
-			d.id = 'chart_' + String(n)
-			document.body.appendChild(d)
+		function updateAdcColorData(){
+			var req = new XMLHttpRequest;
+			req.open("GET", "/colordata/anttun_" + String(THIS_ID) + ".txt")
+			req.send()
+			req.onreadystatechange = function(){
+				if (this.readyState == 4 && this.status == 200){
+					var text = this.responseText
+					text = text.split(",")
+					document.getElementById("xpolbutton").style.backgroundColor = "rgb(" + text[0] + "," + text[1] + "," + text[2] + ")"
+					document.getElementById("ypolbutton").style.backgroundColor = "rgb(" + text[3] + "," + text[4] + "," + text[5] + ")"
+				}
+			}
 		}
 
-		for (let n = 1; n < ndivs + 1; n++){
-			google.charts.setOnLoadCallback(function(){
-				drawChart(n + 1 - 1)
-			});
+		function drawChart() {
+
+			var chart = new google.visualization.LineChart(document.getElementById('chart'));
+			window['chart'] = chart
+
+			updateChartData()
+
 		}
+
+		function drawHist(){
+			var adc = new google.visualization.Histogram(document.getElementById('hist'))
+			window['hist'] = adc
+
+			updateAdcData()
+		}
+
+
+		google.charts.setOnLoadCallback(function(){
+			drawChart()
+			setTimeout(function(){
+				drawHist()
+			}, 500)
+		});
+
+		setInterval(updateChartData, 5000)
+		setInterval(updateAdcData, 5000)
+		setInterval(updateAdcColorData, 5000)
 
 		// Set a callback to run when the Google Visualization API is loaded.
 	</script>

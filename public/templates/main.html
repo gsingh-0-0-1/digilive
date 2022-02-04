@@ -11,7 +11,7 @@
 <body>
 </body>
 <script type="text/javascript">
-	var NUM_ANTENNAS = 6;
+	var NUM_ANTENNAS = null;
 
 	var IMAGE_WIDTH = 50;
 	var BORDER_WIDTH = 1;
@@ -36,31 +36,43 @@
 		}, 200)
 	}
 
-	//create image elements
-	for (var i = 0; i < NUM_ANTENNAS; i++){
-		var el = document.createElement("img")
-		el.id = "anttun" + String(i + 1)
-		el.style.border = String(BORDER_WIDTH) + "px solid black"
-		document.body.appendChild(el)
-	}
+	var req = new XMLHttpRequest;
+	req.open("GET", "/totalantennae")
+	req.send()
+	req.onreadystatechange = function(){
+		if (this.readyState == 4 && this.status == 200){
+			NUM_ANTENNAS = this.responseText * 1
+			//create image elements
+			for (var i = 0; i < NUM_ANTENNAS; i++){
+				var el = document.createElement("img")
+				el.id = "anttun" + String(i + 1)
+				el.style.border = String(BORDER_WIDTH) + "px solid black"
+				let n = i;
+				el.onclick = function(){
+					window.location.replace(window.location.origin + "/chart/" + String(n + 1))
+				}
+				document.body.appendChild(el)
+			}
 
-	var parser = new DOMParser();
+			var parser = new DOMParser();
 
-	//set image sources
-	for (var i = 0; i < NUM_ANTENNAS; i++){
-		var el = getImage(i + 1)
-		el.src = "images/anttun" + String(i + 1) + ".png?t=" + new Date().getTime()
-		el.style.position = "relative"
-		el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
-	}
+			//set image sources
+			for (var i = 0; i < NUM_ANTENNAS; i++){
+				var el = getImage(i + 1)
+				el.src = "images/anttun" + String(i + 1) + ".png?t=" + new Date().getTime()
+				el.style.position = "relative"
+				el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
+			}
 
-	function resetSrcs(){
-		for (var i = 0; i < NUM_ANTENNAS; i++){
-			var el = getImage(i + 1)
-			resetSrc(el)
+			function resetSrcs(){
+				for (var i = 0; i < NUM_ANTENNAS; i++){
+					var el = getImage(i + 1)
+					resetSrc(el)
+				}
+			}
+
+			setInterval(resetSrcs, 5000)
 		}
 	}
-
-	setInterval(resetSrcs, 5000)
 </script>
 </html>

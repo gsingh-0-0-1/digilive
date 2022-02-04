@@ -1,6 +1,7 @@
 import subprocess
+import sys
 
-N_ANTENNAE = 6
+N_ANTENNAE = int(sys.argv[1])
 
 f = open("pids.txt", "w")
 

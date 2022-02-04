@@ -13,7 +13,7 @@ var ADC_SAMPLES = 16384
 var SAMPLE_SPECTRA = [];
 var SPECTRA_CHANS = 4096
 
-var ANTENNAE = 40
+var ANTENNAE = process.argv[2] * 1
 
 
 //utility functions
@@ -89,23 +89,42 @@ function reGenerateSpectra(){
 
 app.get('/adcsnapshot/:id', (req, res) => {
 	var id = req.params.id * 1
-	var s = SAMPLE_ADC_SNAPSHOTS[id][0].join("_")
+	var s = SAMPLE_ADC_SNAPSHOTS[id - 1][0].join("_")
 	s = s + ":"
-	s = s + SAMPLE_ADC_SNAPSHOTS[id][1].join("_")
+	s = s + SAMPLE_ADC_SNAPSHOTS[id - 1][1].join("_")
+
+	try{
+		var adc_stds = fs.readFileSync("public/data/std_anttun_" + String(id - 1) + ".txt", {root: __dirname, encoding : "utf-8"})
+		adc_stds = adc_stds.split("\n")
+	} catch (err){
+		var adc_stds = [1, 1]
+	}
+
+	s = String(adc_stds[0]) + "_" + String(adc_stds[1]) + "|" + s
+
 	res.send(s)
 })
 
 app.get('/spectrum/:id', (req, res) => {
 	var id = req.params.id * 1
-	var s = SAMPLE_SPECTRA[id][0].join("_")
+	var s = SAMPLE_SPECTRA[id - 1][0].join("_")
 	s = s + ":"
-	s = s + SAMPLE_SPECTRA[id][1].join("_")
+	s = s + SAMPLE_SPECTRA[id - 1][1].join("_")
+
 	res.send(s)
 })
 
 
 app.get("/", (req, res) => {
 	res.sendFile("public/templates/main.html", {root: __dirname})
+})
+
+app.get("/chart/:id", (req, res) => {
+	res.sendFile("public/templates/livegraph.html", {root: __dirname})
+})
+
+app.get("/totalantennae", (req, res) => {
+	res.send(String(ANTENNAE))
 })
 
 reGenerateADCSnapshot()

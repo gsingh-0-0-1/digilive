@@ -25,7 +25,7 @@ while True:
 	SPECTRA = np.array(SPECTRA)
 
 	req = requests.get("http://0.0.0.0:9000/adcsnapshot/" + str(THIS_ANTENNA))
-	data = req.text.split(":")
+	data = req.text.split("|")[1].split(":")
 	ADC_SAMPLES = [[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]]
 
 	adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
@@ -98,18 +98,29 @@ while True:
 		G_VAL_1 -= min(1, 2 * (dev_frac_1 - 0.5)) * 255
 
 
-	colorrect[ystart : yend, xstart : xend0, 0] = int(B_VAL_0)
-	colorrect[ystart : yend, xstart : xend0, 1] = int(G_VAL_0)
-	colorrect[ystart : yend, xstart : xend0, 2] = int(R_VAL_0)
+	B_VAL_0 = int(B_VAL_0)
+	B_VAL_1 = int(B_VAL_1)
+	G_VAL_0 = int(G_VAL_0)
+	G_VAL_1 = int(G_VAL_1)
+	R_VAL_0 = int(R_VAL_0)
+	R_VAL_1 = int(R_VAL_1)
 
-	colorrect[ystart : yend, xend0 : xend1, 0] = int(B_VAL_1)
-	colorrect[ystart : yend, xend0 : xend1, 1] = int(G_VAL_1)
-	colorrect[ystart : yend, xend0 : xend1, 2] = int(R_VAL_1)
+	colorrect[ystart : yend, xstart : xend0, 0] = B_VAL_0
+	colorrect[ystart : yend, xstart : xend0, 1] = G_VAL_0
+	colorrect[ystart : yend, xstart : xend0, 2] = R_VAL_0
+
+	colorrect[ystart : yend, xend0 : xend1, 0] = B_VAL_1
+	colorrect[ystart : yend, xend0 : xend1, 1] = G_VAL_1
+	colorrect[ystart : yend, xend0 : xend1, 2] = R_VAL_1
 
 	img = np.concatenate((img, colorrect), axis = 1)
 	cv2.imwrite(imgdir + imgname, img)
 
-	#np.savetxt("public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
+	np.savetxt("public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
+	f = open("public/colordata/anttun_" + str(THIS_ANTENNA) + ".txt", "w")
+	f.write(str(R_VAL_0) + "," + str(G_VAL_0) + "," + str(B_VAL_0))
+	f.write("," + str(R_VAL_1) + "," + str(G_VAL_1) + "," + str(B_VAL_1))
+	f.close()
 
 	ax[0].cla()
 	ax[1].cla()
