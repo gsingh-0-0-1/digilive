@@ -31,9 +31,9 @@
 		var current_src = el.src
 		var new_src = current_src.split("?")[0] + "?t=" + new Date().getTime()
 		el.src = new_src
-		setTimeout(function(){
+		/*setTimeout(function(){
 			checkSrc(el)
-		}, 200)
+		}, 200)*/
 	}
 
 	function resetSrcs(){
@@ -69,7 +69,7 @@
 				el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
 			}
 
-			setInterval(resetSrcs, 5000)
+			setInterval(resetSrcs, 2000)
 		}
 	}
 </script>

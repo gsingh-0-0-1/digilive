@@ -125,4 +125,4 @@ while True:
 	ax[0].cla()
 	ax[1].cla()
 
-	time.sleep(1)
+	#time.sleep(1)
