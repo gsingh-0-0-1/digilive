@@ -9,7 +9,7 @@ THIS_ANTENNA = int(sys.argv[1])
 
 fig, ax = plt.subplots(1, 2, 
 				gridspec_kw={
-                   'width_ratios': [2.5, 1]
+                   'width_ratios': [2, 1]
                    },
                 figsize = (17, 4))
 
