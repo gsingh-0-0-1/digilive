@@ -13,7 +13,7 @@
 <script type="text/javascript">
 	var NUM_ANTENNAS = null;
 
-	var IMAGE_WIDTH = 25;
+	var IMAGE_WIDTH = 33.3;
 	var BORDER_WIDTH = 1;
 
 	function checkSrc(el){
@@ -36,10 +36,16 @@
 		}, 200)*/
 	}
 
-	function resetSrcs(){
-		for (var i = 0; i < NUM_ANTENNAS; i++){
-			var el = getImage(i + 1)
+	function resetSrcs(n){
+		var el = getImage(n)
+		if (el === null || el === undefined){
+
+		}
+		else{
 			resetSrc(el)
+			setTimeout(function(){
+				resetSrcs(n + 1)
+			}, 300)
 		}
 	}
 
@@ -69,7 +75,9 @@
 				el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
 			}
 
-			setInterval(resetSrcs, 20000)
+			setInterval(function(){
+				resetSrcs(1)
+			}, 20000)
 		}
 	}
 </script>

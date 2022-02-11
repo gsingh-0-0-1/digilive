@@ -1,9 +1,12 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import requests
 import time
 import sys
 import cv2
+
+matplotlib.use('agg')
 
 THIS_ANTENNA = int(sys.argv[1])
 
@@ -37,7 +40,7 @@ while True:
 	ax[0].set_xlabel("Channel")
 	ax[0].set_ylabel("Power (dB)")
 	ax[0].grid()
-	ax[0].legend()
+	ax[0].legend(loc = 'upper right')
 
 
 	ax[1].set_xlabel("ADC Values")
@@ -46,14 +49,14 @@ while True:
 	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y-pol-std = " + str(round(adc_std[1], 3)))
 	ax[1].set_xlim([-127, 127])
 	ax[1].grid()
-	ax[1].legend()
+	ax[1].legend(loc = 'upper right')
 
 	imgdir = "public/images/"
 
 	imgname = "anttun" + str(THIS_ANTENNA) + ".png"
 	tempimgname = "t_anttun" + str(THIS_ANTENNA) + ".png"
 
-	plt.savefig(imgdir + tempimgname, bbox_inches = "tight")
+	plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 75.0)
 
 	img = cv2.imread(imgdir + tempimgname)
 	shape = list(img.shape)
@@ -125,4 +128,4 @@ while True:
 	ax[0].cla()
 	ax[1].cla()
 
-	#time.sleep(1)
+	time.sleep(10)
