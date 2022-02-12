@@ -8,7 +8,7 @@ import cv2
 
 matplotlib.use('agg')
 
-matplotlib.rcParams.update({'font.size' : 22})
+matplotlib.rcParams.update({'font.size' : 27})
 #matplotlib.rcParams.update({'axes.titlesize' : 30})
 
 
@@ -20,8 +20,9 @@ fig, ax = plt.subplots(1, 2,
                    },
                 figsize = (17, 6))
 
-IDEAL_ADC_STD = 16
-ADC_MAX_DEV = 6
+HALFRANGE = 2 ** 13
+IDEAL_ADC_STD = HALFRANGE / 8
+ADC_MAX_DEV = IDEAL_ADC_STD * 0.5
 
 while True:
 
@@ -40,7 +41,7 @@ while True:
 
 	ax[0].plot(SPECTRA[0], color = 'blue', label = 'X-pol')
 	ax[0].plot(SPECTRA[1], color = 'red', label = 'Y-pol')
-	ax[0].set_title("Simulated Ant-Tun " + str(THIS_ANTENNA), fontsize = 20)
+	ax[0].set_title("Simulated Ant-Tun " + str(THIS_ANTENNA))
 	ax[0].set_xlabel("Channel")
 	ax[0].set_ylabel("Power (dB)")
 	ax[0].grid()
@@ -51,7 +52,7 @@ while True:
 	#ax[1].set_ylabel("Counts")
 	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5, label = "X = " + str(round(adc_std[0], 2)))
 	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y = " + str(round(adc_std[1], 2)))
-	ax[1].set_xlim([-127, 127])
+	ax[1].set_xlim([-HALFRANGE, HALFRANGE])
 	cur_ylim = ax[1].get_ylim()
 	ax[1].set_ylim([cur_ylim[0], int(cur_ylim[1] * 1.4)])
 	ax[1].grid()

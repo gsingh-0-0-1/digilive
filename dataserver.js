@@ -15,6 +15,10 @@ var SPECTRA_CHANS = 4096
 
 var ANTENNAE = process.argv[2] * 1
 
+var HALFRANGE = Math.pow(2, 13)
+var IDEAL_ADC_STD = HALFRANGE / 8
+var ADC_STD_VAR = IDEAL_ADC_STD * 0.5
+
 
 //utility functions
 function randomnormal(mean, std){
@@ -49,7 +53,7 @@ function reGenerateADCSnapshot(){
 		var subarr2 = []
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr1)
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr2)
-		var std = [(randomuniform(16, 12))]
+		var std = [(randomuniform(IDEAL_ADC_STD, ADC_STD_VAR))]
 		std.push(std[0] + randomuniform(0, 3))
 		for (var i = 0; i < ADC_SAMPLES; i++){
 			for (var pol = 0; pol < 2; pol++){
