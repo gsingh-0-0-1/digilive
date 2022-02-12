@@ -8,13 +8,17 @@ import cv2
 
 matplotlib.use('agg')
 
+matplotlib.rcParams.update({'font.size' : 22})
+#matplotlib.rcParams.update({'axes.titlesize' : 30})
+
+
 THIS_ANTENNA = int(sys.argv[1])
 
 fig, ax = plt.subplots(1, 2, 
 				gridspec_kw={
                    'width_ratios': [2, 1]
                    },
-                figsize = (17, 4))
+                figsize = (17, 6))
 
 IDEAL_ADC_STD = 16
 ADC_MAX_DEV = 6
@@ -43,20 +47,22 @@ while True:
 	ax[0].legend(loc = 'upper right')
 
 
-	ax[1].set_xlabel("ADC Values")
-	ax[1].set_ylabel("Counts")
-	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5, label = "X-pol-std = " + str(round(adc_std[0], 3)))
-	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y-pol-std = " + str(round(adc_std[1], 3)))
-	ax[1].set_xlim([-127, 127])
+	ax[1].set_title("ADC Values")#, X = " + str(round(adc_std[0], 2)) + ", Y = " + str(round(adc_std[1], 2)))
+	#ax[1].set_ylabel("Counts")
+	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5, label = "X = " + str(round(adc_std[0], 2)))
+	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y = " + str(round(adc_std[1], 2)))
+        ax[1].set_xlim([-127, 127])
+        cur_ylim = ax[1].get_ylim()
+        ax[1].set_ylim([cur_ylim[0], int(cur_ylim[1] * 1.4)])
 	ax[1].grid()
-	ax[1].legend(loc = 'upper right')
+	#ax[1].legend(loc = 'upper right')
 
 	imgdir = "public/images/"
 
 	imgname = "anttun" + str(THIS_ANTENNA) + ".png"
 	tempimgname = "t_anttun" + str(THIS_ANTENNA) + ".png"
 
-	plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 75.0)
+	plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 250.0)
 
 	img = cv2.imread(imgdir + tempimgname)
 	shape = list(img.shape)

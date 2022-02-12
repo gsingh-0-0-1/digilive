@@ -115,7 +115,7 @@ app.get('/spectrum/:id', (req, res) => {
 })
 
 
-app.get("/", (req, res) => {
+app.get("/:pagenum", (req, res) => {
 	res.sendFile("public/templates/main.html", {root: __dirname})
 })
 
