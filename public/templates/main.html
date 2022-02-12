@@ -13,7 +13,12 @@
 <script type="text/javascript">
 	var NUM_ANTENNAS = null;
 
-	var IMAGE_WIDTH = 33.3;
+	var whichpage = window.location.pathname.replace("/", "")
+
+	var START_ANTENNA = 1 + ((whichpage - 1) * 20)
+	var STOP_ANTENNA = ((whichpage) * 20)
+
+	var IMAGE_WIDTH = 25;
 	var BORDER_WIDTH = 1;
 
 	function checkSrc(el){
@@ -56,28 +61,28 @@
 		if (this.readyState == 4 && this.status == 200){
 			NUM_ANTENNAS = this.responseText * 1
 			//create image elements
-			for (var i = 0; i < NUM_ANTENNAS; i++){
+			for (var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
 				var el = document.createElement("img")
-				el.id = "anttun" + String(i + 1)
+				el.id = "anttun" + String(i)
 				el.style.border = String(BORDER_WIDTH) + "px solid black"
 				let n = i;
 				el.onclick = function(){
-					window.location.replace(window.location.origin + "/chart/" + String(n + 1))
+					window.location.replace(window.location.origin + "/chart/" + String(n))
 				}
 				document.body.appendChild(el)
 			}
 
 			//set image sources
-			for (var i = 0; i < NUM_ANTENNAS; i++){
-				var el = getImage(i + 1)
-				el.src = "images/anttun" + String(i + 1) + ".png?t=" + new Date().getTime()
+			for (var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
+				var el = getImage(i)
+				el.src = "images/anttun" + String(i) + ".png?t=" + new Date().getTime()
 				el.style.position = "relative"
 				el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
 			}
 
 			setInterval(function(){
-				resetSrcs(1)
-			}, 20000)
+				resetSrcs(START_ANTENNA)
+			}, 30000)
 		}
 	}
 </script>
