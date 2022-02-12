@@ -51,11 +51,11 @@ while True:
 	#ax[1].set_ylabel("Counts")
 	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5, label = "X = " + str(round(adc_std[0], 2)))
 	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y = " + str(round(adc_std[1], 2)))
-        ax[1].set_xlim([-127, 127])
-        cur_ylim = ax[1].get_ylim()
-        ax[1].set_ylim([cur_ylim[0], int(cur_ylim[1] * 1.4)])
+	ax[1].set_xlim([-127, 127])
+	cur_ylim = ax[1].get_ylim()
+	ax[1].set_ylim([cur_ylim[0], int(cur_ylim[1] * 1.4)])
 	ax[1].grid()
-	#ax[1].legend(loc = 'upper right')
+	ax[1].legend(loc = 'upper right')
 
 	imgdir = "public/images/"
 
