@@ -18,7 +18,7 @@ fig, ax = plt.subplots(1, 2,
 				gridspec_kw={
                    'width_ratios': [2, 1]
                    },
-                figsize = (17, 6))
+                figsize = (17, 4.5))
 
 HALFRANGE = 2 ** 13
 IDEAL_ADC_STD = HALFRANGE / 8

@@ -38,8 +38,8 @@ function randomnormal(mean, std){
 	return out;
 }
 
-function randomuniform(center = 0.5, scale = 1){
-	let val = Math.random() - 0.5
+function randomuniform(center = 0, scale = 1){
+	let val = 2 * (Math.random() - 0.5)
 	val = val * scale + center
 	return val;
 }
@@ -61,7 +61,7 @@ function reGenerateADCSnapshot(){
 		var subarr2 = []
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr1)
 		SAMPLE_ADC_SNAPSHOTS[j].push(subarr2)
-		var std = [(randomuniform(IDEAL_ADC_STD, ADC_STD_VAR))]
+		var std = [randomuniform(IDEAL_ADC_STD, ADC_STD_VAR)]
 		std.push(std[0] + randomuniform(0, 3))
 		for (var i = 0; i < ADC_SAMPLES; i++){
 			for (var pol = 0; pol < 2; pol++){
@@ -70,6 +70,8 @@ function reGenerateADCSnapshot(){
 		}
 	}
 
+	//computing instead of storing the previous values so we can simulate actual
+	//computation for when we pull real data
 	for (var j = 0; j < ANTENNAE; j++){
 		let arr = [stdDev(SAMPLE_ADC_SNAPSHOTS[j][0]), stdDev(SAMPLE_ADC_SNAPSHOTS[j][1])]
 		ADC_STDS_ARR.push(arr)
@@ -95,7 +97,7 @@ function reGenerateSpectra(){
 				}
 
 				//randomly add some spikes
-				if (randomuniform() > 0.999){
+				if (randomuniform(0.5, 0.5) > 0.999){
 					let randpol = Math.round(randomuniform())
 					SAMPLE_SPECTRA[j][randpol][SAMPLE_SPECTRA[j][randpol].length - 1] += randomuniform(30, 15)
 				}
