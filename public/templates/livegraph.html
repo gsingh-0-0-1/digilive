@@ -28,11 +28,15 @@
 		Y-pol ADC Values
 	</button>
 
-	<button style="position: fixed; left: 25%; top: 90%; padding: 2% 2%; font-family: Courier; transform: translate(-50%, -50%);" onclick="window.location.href = '/'">
+	<button style="position: fixed; left: 25%; top: 90%; padding: 2% 2%; font-family: Courier; transform: translate(-50%, -50%);" onclick="javascript:backHome()">
 		<< Main Page
 	</button>
 
 	<script type="text/javascript">
+
+		function backHome(){
+			window.location.href = '/' + (Math.floor((window.location.pathname.split("/").slice(-1)[0] * 1 - 1) / 20) + 1)
+		}
 
 		var THIS_ID = window.location.href.split("/")
 		THIS_ID = THIS_ID[THIS_ID.length - 1] * 1
@@ -88,8 +92,8 @@
 						hAxis: {
 							title : 'Value',
 							viewWindow: {
-								min : -127,
-								max : 127
+								min : -8192,
+								max : 8192
 							}
 						},
 						vAxis: {
@@ -116,8 +120,8 @@
 
 					// Create the data table.
 					var data = new google.visualization.DataTable();
-					data.addColumn('number', 'X-pol (STD ' + String(Math.round(stds[0] * 10000) / 10000) + ')');
-					data.addColumn('number', 'Y-pol (STD ' + String(Math.round(stds[1] * 10000) / 10000) + ')');
+					data.addColumn('number', 'X: STD ' + String(Math.round(stds[0])));
+					data.addColumn('number', 'Y: STD ' + String(Math.round(stds[1])));
 
 					for (var chanidx = 0; chanidx < pol1.length; chanidx++){
 						var values = [pol1[chanidx] * 1, pol2[chanidx] * 1]

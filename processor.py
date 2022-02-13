@@ -42,8 +42,8 @@ while True:
 	ax[0].plot(SPECTRA[0], color = 'blue', label = 'X-pol')
 	ax[0].plot(SPECTRA[1], color = 'red', label = 'Y-pol')
 	ax[0].set_title("Simulated Ant-Tun " + str(THIS_ANTENNA))
-	ax[0].set_xlabel("Channel")
-	ax[0].set_ylabel("Power (dB)")
+	#ax[0].set_xlabel("Channel")
+	#ax[0].set_ylabel("Power (dB)")
 	ax[0].grid()
 	ax[0].legend(loc = 'upper right')
 
@@ -68,12 +68,12 @@ while True:
 	img = cv2.imread(imgdir + tempimgname)
 
 	shape = list(img.shape)
-	shape[0] = int(shape[0] / 5)
+	shape[0] = int(shape[0] / 4)
 
 	textrect = np.ones(shape) * 255
 	img = np.concatenate((img, textrect), axis = 0)
 
-	cv2.putText(img, "X:" + str(round(adc_std[0], 2)) + "  Y:" + str(round(adc_std[1], 2)),
+	cv2.putText(img, "X:" + str(round(adc_std[0])) + "  Y:" + str(round(adc_std[1])),
 		(int(img.shape[1] * 0.03), int(img.shape[0] * 0.95)),
 		cv2.FONT_HERSHEY_SIMPLEX,
 		10,
