@@ -50,13 +50,13 @@ while True:
 
 	ax[1].set_title("ADC Values")#, X = " + str(round(adc_std[0], 2)) + ", Y = " + str(round(adc_std[1], 2)))
 	#ax[1].set_ylabel("Counts")
-	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5, label = "X = " + str(round(adc_std[0], 2)))
-	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5, label = "Y = " + str(round(adc_std[1], 2)))
+	ax[1].hist(ADC_SAMPLES[0], 50, color = 'blue', rwidth = 0.5)#, label = "X = " + str(round(adc_std[0], 2)))
+	ax[1].hist(ADC_SAMPLES[1], 50, color = 'red', rwidth = 0.5)#, label = "Y = " + str(round(adc_std[1], 2)))
 	ax[1].set_xlim([-HALFRANGE, HALFRANGE])
-	cur_ylim = ax[1].get_ylim()
-	ax[1].set_ylim([cur_ylim[0], int(cur_ylim[1] * 1.4)])
+	#cur_ylim = ax[1].get_ylim()
+	#ax[1].set_ylim([cur_ylim[0], int(cur_ylim[1] * 1.4)])
 	ax[1].grid()
-	ax[1].legend(loc = 'upper right')
+	#ax[1].legend(loc = 'upper right')
 
 	imgdir = "public/images/"
 
@@ -66,6 +66,23 @@ while True:
 	plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 250.0)
 
 	img = cv2.imread(imgdir + tempimgname)
+
+	shape = list(img.shape)
+	shape[0] = int(shape[0] / 5)
+
+	textrect = np.ones(shape) * 255
+	img = np.concatenate((img, textrect), axis = 0)
+
+	cv2.putText(img, "X:" + str(round(adc_std[0], 2)) + "  Y:" + str(round(adc_std[1], 2)),
+		(int(img.shape[1] * 0.03), int(img.shape[0] * 0.95)),
+		cv2.FONT_HERSHEY_SIMPLEX,
+		10,
+		(0, 0, 0),
+		15,
+		2
+		)
+
+
 	shape = list(img.shape)
 	shape[1] = int(shape[1] / 20)
 	colorrect = np.ones(shape, dtype=int) * 255
@@ -124,6 +141,7 @@ while True:
 	colorrect[ystart : yend, xend0 : xend1, 2] = R_VAL_1
 
 	img = np.concatenate((img, colorrect), axis = 1)
+
 	cv2.imwrite(imgdir + imgname, img)
 
 	np.savetxt("public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")

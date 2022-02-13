@@ -10,6 +10,8 @@ app.use(express.static('public'));
 var SAMPLE_ADC_SNAPSHOTS = [];
 var ADC_SAMPLES = 16384
 
+var ADC_STDS_ARR = []
+
 var SAMPLE_SPECTRA = [];
 var SPECTRA_CHANS = 4096
 
@@ -21,6 +23,12 @@ var ADC_STD_VAR = IDEAL_ADC_STD * 0.5
 
 
 //utility functions
+function stdDev(array){
+	const n = array.length
+	const mean = array.reduce((a, b) => a + b) / n
+	return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
+}
+
 function randomnormal(mean, std){
 	var u = 0, v = 0;
 	while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
@@ -61,6 +69,11 @@ function reGenerateADCSnapshot(){
 			}
 		}
 	}
+
+	for (var j = 0; j < ANTENNAE; j++){
+		let arr = [stdDev(SAMPLE_ADC_SNAPSHOTS[j][0]), stdDev(SAMPLE_ADC_SNAPSHOTS[j][1])]
+		ADC_STDS_ARR.push(arr)
+	}
 }
 
 function reGenerateSpectra(){
@@ -97,12 +110,7 @@ app.get('/adcsnapshot/:id', (req, res) => {
 	s = s + ":"
 	s = s + SAMPLE_ADC_SNAPSHOTS[id - 1][1].join("_")
 
-	try{
-		var adc_stds = fs.readFileSync("public/data/std_anttun_" + String(id - 1) + ".txt", {root: __dirname, encoding : "utf-8"})
-		adc_stds = adc_stds.split("\n")
-	} catch (err){
-		var adc_stds = [1, 1]
-	}
+	var adc_stds = ADC_STDS_ARR[id - 1]
 
 	s = String(adc_stds[0]) + "_" + String(adc_stds[1]) + "|" + s
 
@@ -116,6 +124,11 @@ app.get('/spectrum/:id', (req, res) => {
 	s = s + SAMPLE_SPECTRA[id - 1][1].join("_")
 
 	res.send(s)
+})
+
+app.get('/adcstd/:id', (req, res) => {
+	var id = req.params.id * 1
+	res.send(ADC_STDS_ARR[id][0] + "_" + ADC_STDS_ARR[id][1])
 })
 
 
@@ -134,7 +147,7 @@ app.get("/totalantennae", (req, res) => {
 reGenerateADCSnapshot()
 reGenerateSpectra()
 
-setInterval(reGenerateADCSnapshot, 5000)
-setInterval(reGenerateSpectra, 5000)
+setInterval(reGenerateADCSnapshot, 10000)
+setInterval(reGenerateSpectra, 10000)
 
 app.listen(port, '0.0.0.0')
