@@ -98,7 +98,7 @@ function reGenerateSpectra(){
 
 				//randomly add some spikes
 				if (randomuniform(0.5, 0.5) > 0.999){
-					let randpol = Math.round(randomuniform())
+					let randpol = Math.round(randomuniform(0.5, 0.5))
 					SAMPLE_SPECTRA[j][randpol][SAMPLE_SPECTRA[j][randpol].length - 1] += randomuniform(30, 15)
 				}
 			}
