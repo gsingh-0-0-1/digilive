@@ -9,6 +9,12 @@ import PIL
 from PIL import ImageDraw
 from PIL import ImageFont
 
+configfile = open("config.txt", "r")
+configdata = configfile.read().split("\n")
+configfile.close()
+
+CONFIG_FONT = configdata[0]
+
 matplotlib.use('agg')
 
 matplotlib.rcParams.update({'font.size' : 27})
@@ -75,9 +81,11 @@ while True:
     shape = list(np.array(img).shape)
     shape[0] = int(shape[0] / 4)
 
-    textrect = np.ones(shape) * 255
+    textrect = np.ones(shape, dtype = np.array(img).dtype) * 255
     newimg = np.concatenate((np.array(img), textrect), axis = 0)
     img = PIL.Image.fromarray(newimg, mode = "RGBA")
+    #img.save(imgdir + imgname)
+    #time.sleep(5)
 
     #cv2.putText(img, "X:" + str(round(adc_std[0])) + " Y:" + str(round(adc_std[1])),
 	#	(int(img.shape[1] * 0.3), int(img.shape[0] * 0.95)),
@@ -89,13 +97,13 @@ while True:
 	#	)
 
 
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/lato/Lato-Medium.ttf", 16)
-    draw.text( (int(shape[1] * 0.3), int(shape[0] * 0.85)), "σX:" + str(round(adc_std[0])) + " σY:" + str(round(adc_std[1])), (0, 0, 0), font = font )
-
     shape = list(np.array(img).shape)
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(CONFIG_FONT, 230)
+    draw.text( (int(shape[1] * 0.48), int(shape[0] * 0.8)), "σX:" + str(round(adc_std[0])) + "   σY:" + str(round(adc_std[1])), font = font, fill = (0, 0, 0) )
+
     shape[1] = int(shape[1] / 20)
-    colorrect = np.ones(shape, dtype=int) * 255
+    colorrect = np.ones(shape, dtype = np.array(img).dtype) * 255
 
     #indices of the rectange we want to color in
     ystart = 0
@@ -142,19 +150,21 @@ while True:
     R_VAL_0 = int(R_VAL_0)
     R_VAL_1 = int(R_VAL_1)
 
-    colorrect[ystart : yend, xstart : xend0, 0] = B_VAL_0
+    colorrect[ystart : yend, xstart : xend0, 0] = R_VAL_0
     colorrect[ystart : yend, xstart : xend0, 1] = G_VAL_0
-    colorrect[ystart : yend, xstart : xend0, 2] = R_VAL_0
+    colorrect[ystart : yend, xstart : xend0, 2] = B_VAL_0
 
-    colorrect[ystart : yend, xend0 : xend1, 0] = B_VAL_1
+    colorrect[ystart : yend, xend0 : xend1, 0] = R_VAL_1
     colorrect[ystart : yend, xend0 : xend1, 1] = G_VAL_1
-    colorrect[ystart : yend, xend0 : xend1, 2] = R_VAL_1
+    colorrect[ystart : yend, xend0 : xend1, 2] = B_VAL_1
 
     newimg = np.concatenate((np.array(img), colorrect), axis = 1)
     img = PIL.Image.fromarray(newimg, mode = "RGBA")
-
-    cv2.imwrite(imgdir + imgname, np.array(img))
     #img.save(imgdir + imgname)
+    #time.sleep(5)
+
+    #cv2.imwrite(imgdir + imgname, np.array(img))
+    img.save(imgdir + imgname)
 
     np.savetxt("public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
     f = open("public/colordata/anttun_" + str(THIS_ANTENNA) + ".txt", "w")
