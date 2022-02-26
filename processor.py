@@ -100,7 +100,7 @@ while True:
     shape = list(np.array(img).shape)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(CONFIG_FONT, 230)
-    draw.text( (int(shape[1] * 0.48), int(shape[0] * 0.8)), "σX:" + str(round(adc_std[0])) + "   σY:" + str(round(adc_std[1])), font = font, fill = (0, 0, 0) )
+    draw.text( (int(shape[1] * 0.45), int(shape[0] * 0.8)), "σX:" + str(round(adc_std[0])) + "   σY:" + str(round(adc_std[1])), font = font, fill = (0, 0, 0) )
 
     shape[1] = int(shape[1] / 20)
     colorrect = np.ones(shape, dtype = np.array(img).dtype) * 255
