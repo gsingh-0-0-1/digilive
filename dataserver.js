@@ -146,10 +146,20 @@ app.get("/totalantennae", (req, res) => {
 	res.send(String(ANTENNAE))
 })
 
-reGenerateADCSnapshot()
-reGenerateSpectra()
+app.get("/updateadc/:id", (req, res) => {
+    
+})
 
-setInterval(reGenerateADCSnapshot, 10000)
-setInterval(reGenerateSpectra, 10000)
+app.get("/updatespec/:id", (req, res) => {
+    var data = req.query.data;
+    console.log(data)
+    res.send("OK")
+})
+
+//reGenerateADCSnapshot()
+//reGenerateSpectra()
+
+//setInterval(reGenerateADCSnapshot, 10000)
+//setInterval(reGenerateSpectra, 10000)
 
 app.listen(port, '0.0.0.0')
