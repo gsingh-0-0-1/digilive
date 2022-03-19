@@ -17,8 +17,8 @@
 </head>
 <body>
 
-	<div style="position: fixed; left: 2%; top: 50%; transform: translate(0%, -50%);" id="chart"></div>
-	<div style="position: fixed; left: 55%; top: 50%; transform: translate(0%, -50%)" id="hist"></div>
+	<div style="position: fixed; left: 10%; top: 50%; transform: translate(0%, -50%);" id="chart"></div>
+	<div style="position: fixed; left: 60%; top: 50%; transform: translate(0%, -50%)" id="hist"></div>
 
 	<button style="position: fixed; left: 25%; top: 10%; transform: translate(-50%, -50%); font-family: Courier; padding: 2% 2%; border: none" id="xpolbutton">
 		X-pol ADC Values
@@ -41,16 +41,18 @@
 		var THIS_ID = window.location.href.split("/")
 		THIS_ID = THIS_ID[THIS_ID.length - 1] * 1
 
+        var ANTLO = "---"
+
 		function updateChartData(){
 			// Set chart options
-			var options = {title : 'Sample Antenna ' + String(THIS_ID) + ": Spectrum",
-						width : 700,
-						height : 400,
+			var options = {title : 'Ant-Lo ' + ANTLO + ": Spectrum",
+						width : 1000,
+						height : 500,
 						hAxis: {
 							title : 'Channel',
 							viewWindow: {
 								min : 0,
-								max : 4096
+								max : 2048
 							}
 						},
 						vAxis: {
@@ -76,7 +78,7 @@
 					data.addColumn('number', 'Y-pol');
 
 					for (var chanidx = 0; chanidx < pol1.length; chanidx++){
-						var values = [chanidx, pol1[chanidx] * 1, pol2[chanidx] * 1]
+						var values = [chanidx, 10 * Math.log10(pol1[chanidx] * 1), 10 * Math.log10(pol2[chanidx] * 1)]
 						data.addRow(values)
 					}
 					// Instantiate and draw our chart, passing in some options.
@@ -86,9 +88,9 @@
 		}
 
 		function updateAdcData(){
-			var options = {title : 'Sample Antenna ' + String(THIS_ID) + ": ADC Values Histogram",
-						width : 600,
-						height : 400,
+			var options = {title : 'Ant-Lo ' + ANTLO + ": ADC Values Histogram",
+						width : 700,
+						height : 500,
 						hAxis: {
 							title : 'Value',
 							viewWindow: {
@@ -164,13 +166,21 @@
 			updateAdcData()
 		}
 
+        
+        function initialize(){
+            var req = new XMLHttpRequest;
+            req.open("GET", "/antlo/" + String(THIS_ID))
+            req.send()
+            req.onreadystatechange = function(){
+                ANTLO = req.responseText
+                drawChart()
+                setTimeout(function(){
+                    drawHist()
+                })
+            }
+        }
 
-		google.charts.setOnLoadCallback(function(){
-			drawChart()
-			setTimeout(function(){
-				drawHist()
-			}, 500)
-		});
+		google.charts.setOnLoadCallback(initialize);
 
 		setInterval(updateChartData, 5000)
 		setInterval(updateAdcData, 5000)

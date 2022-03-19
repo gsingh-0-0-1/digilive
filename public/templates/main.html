@@ -41,6 +41,19 @@
 		}, 200)*/
 	}
 
+    function checkImg(n){
+        var el = getImage(n)
+        if (!el.complete || el.naturalHeight === 0){
+            resetSrc(el)
+            setTimeout(function(){
+                checkImg(n)
+            }, 1000)
+        }
+        else{
+            
+        }
+    }
+
 	function resetSrcs(n){
 		var el = getImage(n)
 		if (el === null || el === undefined){
@@ -48,11 +61,24 @@
 		}
 		else{
 			resetSrc(el)
+            checkImg(n)
 			setTimeout(function(){
 				resetSrcs(n + 1)
-			}, 300)
+			}, 100)
 		}
 	}
+
+    function setSources(){
+        for (var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
+            var el = getImage(i)
+            el.src = "./images/anttun" + String(i) + ".png?t=" + new Date().getTime()
+            el.style.position = "relative"
+            el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
+            setTimeout(function(){
+                checkImg(i)
+            }, 1000)
+        }
+    }
 
 	var req = new XMLHttpRequest;
 	req.open("GET", "/totalantennae")
@@ -73,12 +99,7 @@
 			}
 
 			//set image sources
-			for (var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
-				var el = getImage(i)
-				el.src = "images/anttun" + String(i) + ".png?t=" + new Date().getTime()
-				el.style.position = "relative"
-				el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
-			}
+            setSources()
 
 			setInterval(function(){
 				resetSrcs(START_ANTENNA)

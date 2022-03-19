@@ -1,4 +1,5 @@
 const express = require('express')
+const bodyParser = require('body-parser')
 var fs = require('fs');
 const {URLSearchParams} = require('url')
 
@@ -6,6 +7,10 @@ const app = express()
 const port = 9000
 
 app.use(express.static('public'));
+
+var jsonParser = bodyParser.json()
+
+var urlencodedParser = bodyParser.urlencoded({ extended : false })
 
 var SAMPLE_ADC_SNAPSHOTS = [];
 var ADC_SAMPLES = 16384
@@ -21,6 +26,12 @@ var HALFRANGE = Math.pow(2, 13)
 var IDEAL_ADC_STD = HALFRANGE / 8
 var ADC_STD_VAR = IDEAL_ADC_STD * 0.5
 
+
+var SPEC_MAX = 100
+var SPEC_MIN = 0
+
+
+var ANTLO_COMBOS = []
 
 //utility functions
 function stdDev(array){
@@ -53,7 +64,8 @@ function bandpass_simulated({chanidx, centerchan = (SPECTRA_CHANS + 1) / 2, heig
 
 //generation functions
 function reGenerateADCSnapshot(){
-	SAMPLE_ADC_SNAPSHOTS = []
+    ADC_STDS_ARR = []
+	/*SAMPLE_ADC_SNAPSHOTS = []
 	for (var j = 0; j < ANTENNAE; j++){
 		var arr = []
 		SAMPLE_ADC_SNAPSHOTS.push(arr)
@@ -68,11 +80,14 @@ function reGenerateADCSnapshot(){
 				SAMPLE_ADC_SNAPSHOTS[j][pol].push(randomnormal(0, std[pol]))
 			}
 		}
-	}
+	}*/
 
 	//computing instead of storing the previous values so we can simulate actual
 	//computation for when we pull real data
 	for (var j = 0; j < ANTENNAE; j++){
+        if (SAMPLE_ADC_SNAPSHOTS[j] == undefined){
+            continue
+        }
 		let arr = [stdDev(SAMPLE_ADC_SNAPSHOTS[j][0]), stdDev(SAMPLE_ADC_SNAPSHOTS[j][1])]
 		ADC_STDS_ARR.push(arr)
 	}
@@ -114,13 +129,14 @@ app.get('/adcsnapshot/:id', (req, res) => {
 
 	var adc_stds = ADC_STDS_ARR[id - 1]
 
-	s = String(adc_stds[0]) + "_" + String(adc_stds[1]) + "|" + s
+    s = String(adc_stds[0]) + "_" + String(adc_stds[1]) + "|" + s
 
 	res.send(s)
 })
 
 app.get('/spectrum/:id', (req, res) => {
 	var id = req.params.id * 1
+    //console.log(SAMPLE_SPECTRA[id - 1])
 	var s = SAMPLE_SPECTRA[id - 1][0].join("_")
 	s = s + ":"
 	s = s + SAMPLE_SPECTRA[id - 1][1].join("_")
@@ -134,10 +150,6 @@ app.get('/adcstd/:id', (req, res) => {
 })
 
 
-app.get("/:pagenum", (req, res) => {
-	res.sendFile("public/templates/main.html", {root: __dirname})
-})
-
 app.get("/chart/:id", (req, res) => {
 	res.sendFile("public/templates/livegraph.html", {root: __dirname})
 })
@@ -146,20 +158,79 @@ app.get("/totalantennae", (req, res) => {
 	res.send(String(ANTENNAE))
 })
 
-app.get("/updateadc/:id", (req, res) => {
-    
-})
-
-app.get("/updatespec/:id", (req, res) => {
-    var data = req.query.data;
-    console.log(data)
+app.get("/setminmax/:min/:max", (req, res) => {
+    var min = req.params.min * 1
+    var max = req.params.max * 1
+    //if (max > SPEC_MAX){
+        SPEC_MAX = max
+    //}
+    //if (min < SPEC_MIN){
+        SPEC_MIN = min
+    //}
     res.send("OK")
 })
+
+app.get("/getminmax", (req, res) => {
+    res.send(String(SPEC_MIN) + "_" + String(SPEC_MAX))
+})
+
+app.post("/updateadc/:id", urlencodedParser, (req, res) => {
+    var data = req.body.fulladc
+    data = data.split(":")
+    data[0] = data[0].split("_")
+    data[1] = data[1].split("_")
+    data[0] = data[0].map(Number)
+    data[1] = data[1].map(Number)
+    if (SAMPLE_ADC_SNAPSHOTS[req.params.id*1 - 1] == undefined){
+        SAMPLE_ADC_SNAPSHOTS.push([])
+    }
+    SAMPLE_ADC_SNAPSHOTS[req.params.id*1 - 1] = data
+    //reGenerateADCSnapshot()
+    res.send("ADC_OK") 
+})
+
+app.post("/updatespec/:id", urlencodedParser, (req, res) => {
+    var data = req.body.fullspec
+    data = data.split(":")
+    data[0] = data[0].split("_")
+    data[1] = data[1].split("_")
+    data[0] = data[0].map(Number)
+    data[1] = data[1].map(Number)
+    if (SAMPLE_SPECTRA[req.params.id*1 - 1] == undefined){
+        SAMPLE_SPECTRA.push([])
+    }
+    SAMPLE_SPECTRA[req.params.id*1 - 1] = data
+    //console.log(data)
+    res.send("SPEC_OK")
+})
+
+app.get("/antlo_update/:id/:combo", (req, res) => {
+    var id = req.params.id *= 1
+    id = id - 1
+    if (ANTLO_COMBOS[id] === undefined){
+        ANTLO_COMBOS.push("")
+    }
+    ANTLO_COMBOS[id] = req.params.combo
+    res.send("OK")
+})
+
+app.get("/antlo/:id", (req, res) => {
+    res.send(ANTLO_COMBOS[req.params.id * 1 - 1])
+})
+
+app.get('/ping', (req, res) => {
+    res.send('pong')
+})
+
+app.get("/:pagenum", (req, res) => {
+    res.sendFile("public/templates/main.html", {root: __dirname})
+})
+
 
 //reGenerateADCSnapshot()
 //reGenerateSpectra()
 
-//setInterval(reGenerateADCSnapshot, 10000)
+setInterval(reGenerateADCSnapshot, 10000)
 //setInterval(reGenerateSpectra, 10000)
 
 app.listen(port, '0.0.0.0')
