@@ -12,11 +12,19 @@
 </body>
 <script type="text/javascript">
 	var NUM_ANTENNAS = null;
+    var ANT_LIST = []
+	var whichpage = window.location.pathname.replace("/", "") * 1
 
-	var whichpage = window.location.pathname.replace("/", "")
+	//var START_ANTENNA = 1 + ((whichpage - 1) * 20)
+	//var STOP_ANTENNA = ((whichpage) * 20)
 
-	var START_ANTENNA = 1 + ((whichpage - 1) * 20)
-	var STOP_ANTENNA = ((whichpage) * 20)
+    if (whichpage === 1){
+        ANT_LIST = [1, 2, 3, 4, 9, 10, 11, 12, 17, 18, 19, 20, 25, 26, 27, 28, 33, 34, 35, 36]
+    }
+    if (whichpage == 2){
+        ANT_LIST = [5, 6, 7, 8, 13, 14, 15, 16, 21, 22, 23, 24, 29, 30, 31, 32, 37, 38, 39, 40]
+    }
+
 
 	var IMAGE_WIDTH = 25;
 	var BORDER_WIDTH = 1;
@@ -55,7 +63,7 @@
     }
 
 	function resetSrcs(n){
-		var el = getImage(n)
+		var el = getImage(ANT_LIST[n])
 		if (el === null || el === undefined){
 
 		}
@@ -69,7 +77,7 @@
 	}
 
     function setSources(){
-        for (var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
+        for (var i of ANT_LIST){//(var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
             var el = getImage(i)
             el.src = "./images/anttun" + String(i) + ".png?t=" + new Date().getTime()
             el.style.position = "relative"
@@ -87,7 +95,7 @@
 		if (this.readyState == 4 && this.status == 200){
 			NUM_ANTENNAS = this.responseText * 1
 			//create image elements
-			for (var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
+            for (var i of ANT_LIST){//(var i = START_ANTENNA; i <= STOP_ANTENNA; i++){
 				var el = document.createElement("img")
 				el.id = "anttun" + String(i)
 				el.style.border = String(BORDER_WIDTH) + "px solid black"
@@ -102,7 +110,7 @@
             setSources()
 
 			setInterval(function(){
-				resetSrcs(START_ANTENNA)
+				resetSrcs(0)
 			}, 30000)
 		}
 	}

@@ -35,7 +35,7 @@ fig, ax = plt.subplots(1, 2,
 
 HALFRANGE = 2 ** 13
 IDEAL_ADC_STD = HALFRANGE / 8
-ADC_MAX_DEV = IDEAL_ADC_STD * 0.5
+ADC_MAX_DEV = 240#IDEAL_ADC_STD * 0.5
 
 snap_tab = snap_config.get_ata_snap_tab()
 #rfsoc_hostnames = [el for el in list(snap_tab['snap_hostname']) if 'frb' not in el][THIS_ANTENNA]
@@ -43,7 +43,13 @@ snap_tab = snap_config.get_ata_snap_tab()
 
 antlo = snap_tab["ANT_name"][THIS_ANTENNA + 11] + snap_tab["LO"][THIS_ANTENNA + 11].upper()
 requests.get("http://10.10.1.31:9000/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
+#exec(open("/home/sonata/utils/rcparams.py", "r").read())
 
+centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + 11])
+BW_EFF = 672
+
+plt.rcParams["font.family"] = "Times New Roman"
+#plt.rcParams["font.size"] = 15
 while True:
 
     #xx,yy = rfsocs[0].spec_read(normalize = True)
@@ -81,16 +87,17 @@ while True:
 
     adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
 
-    midfreq = ata_control.get_sky_freq(lo = 'b')
 
     BW = snap_defaults.bw
     NCHANS = 2048
     FOFF = BW / NCHANS
 
-    freqs = np.arange(midfreq - BW / 2, midfreq + BW / 2, FOFF)
+    freqs = np.arange(centerfreq - BW / 2, centerfreq + BW / 2, FOFF)
 
-    ax[0].plot(freqs, 10 * np.log10(SPECTRA[0]), color = 'blue', label = 'X-pol')
-    ax[0].plot(freqs, 10 * np.log10(SPECTRA[1]), color = 'red', label = 'Y-pol')
+    ax[0].plot(freqs, 10 * np.log10(SPECTRA[0]), color = 'blue')#, label = 'X-pol')
+    ax[0].plot(freqs, 10 * np.log10(SPECTRA[1]), color = 'red')#, label = 'Y-pol')
+    ax[0].axvline(centerfreq + BW_EFF/2, color = 'black', linestyle='--')
+    ax[0].axvline(centerfreq - BW_EFF/2, color = 'black', linestyle='--')
     ax[0].set_ylim(SPEC_MIN, SPEC_MAX)
     ax[0].set_title("ANT-LO " + antlo)
     ax[0].set_xlabel(r"$σ_\mathrm{X}$:" + str(round(adc_std[0])), fontsize = 80)
@@ -98,7 +105,7 @@ while True:
     #ax[0].set_xlabel("Channel")
     #ax[0].set_ylabel("Power (dB)")
     ax[0].grid()
-    ax[0].legend(loc = 'upper right')
+    #ax[0].legend(loc = 'upper right')
 
 
     ax[1].set_title("ADC Values")#, X = " + str(round(adc_std[0], 2)) + ", Y = " + str(round(adc_std[1], 2)))
@@ -122,25 +129,6 @@ while True:
 
     img = cv2.imread(imgdir + tempimgname)
 
-    #img = PIL.Image.open(imgdir + tempimgname)
-
-    #shape = list(np.array(img).shape)
-    #shape[0] = int(shape[0] / 4)
-
-    #textrect = np.ones(shape, dtype = np.array(img).dtype) * 255
-    #newimg = np.concatenate((np.array(img), textrect), axis = 0)
-    #img = PIL.Image.fromarray(newimg, mode = "RGBA")
-    #img.save(imgdir + imgname)
-    #time.sleep(5)
-
-    #cv2.putText(img, "X:" + str(round(adc_std[0])) + " Y:" + str(round(adc_std[1])),
-	#	(int(img.shape[1] * 0.3), int(img.shape[0] * 0.95)),
-	#	cv2.FONT_HERSHEY_SIMPLEX,
-	#	7,
-	#	(0, 0, 0),
-	#	15,
-	#	2
-	#	)
 
 
     shape = list(np.array(img).shape)
@@ -222,4 +210,4 @@ while True:
     ax[0].cla()
     ax[1].cla()
 
-    time.sleep(10)
+    time.sleep(30)
