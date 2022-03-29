@@ -6,6 +6,11 @@ const {URLSearchParams} = require('url')
 const app = express()
 const port = 9000
 
+const http = require('http')
+const server = http.createServer(app)
+
+const io = require('socket.io')(server)
+
 app.use(express.static('public'));
 
 var jsonParser = bodyParser.json()
@@ -30,8 +35,16 @@ var ADC_STD_VAR = IDEAL_ADC_STD * 0.5
 var SPEC_MAX = 100
 var SPEC_MIN = 0
 
+var PULLTIME = ''
 
 var ANTLO_COMBOS = []
+
+var PAGES = [1, 2]
+
+for (var page of PAGES){
+    io.of("/" + String(page)).on('connection', (socket) => {
+    })
+}
 
 //utility functions
 function stdDev(array){
@@ -141,7 +154,7 @@ app.get('/spectrum/:id', (req, res) => {
 	s = s + ":"
 	s = s + SAMPLE_SPECTRA[id - 1][1].join("_")
 
-	res.send(s)
+	res.send(SAMPLE_SPECTRA[id - 1][2] + "|" + s)
 })
 
 app.get('/adcstd/:id', (req, res) => {
@@ -196,6 +209,16 @@ app.post("/updatespec/:id", urlencodedParser, (req, res) => {
     data[1] = data[1].split("_")
     data[0] = data[0].map(Number)
     data[1] = data[1].map(Number)
+    var curtime = String(Date()).split("GMT")[0]
+    if (Math.round(ANTENNAE / 2) == req.params.id * 1){
+        PULLTIME = curtime
+        for (var page of PAGES){
+            io.of("/" + String(page)).emit("pulltime", curtime)
+        }
+    }
+    data.push(curtime)
+      
+
     if (SAMPLE_SPECTRA[req.params.id*1 - 1] == undefined){
         SAMPLE_SPECTRA.push([])
     }
@@ -222,6 +245,10 @@ app.get('/ping', (req, res) => {
     res.send('pong')
 })
 
+app.get("/lastpulltime", (req, res) => {
+    res.send(PULLTIME)
+})
+
 app.get("/:pagenum", (req, res) => {
     res.sendFile("public/templates/main.html", {root: __dirname})
 })
@@ -233,4 +260,5 @@ app.get("/:pagenum", (req, res) => {
 setInterval(reGenerateADCSnapshot, 10000)
 //setInterval(reGenerateSpectra, 10000)
 
-app.listen(port, '0.0.0.0')
+server.listen(port, '0.0.0.0')
+//app.listen(port, '0.0.0.0')

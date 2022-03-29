@@ -45,8 +45,20 @@ antlo = snap_tab["ANT_name"][THIS_ANTENNA + 11] + snap_tab["LO"][THIS_ANTENNA + 
 requests.get("http://10.10.1.31:9000/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
 #exec(open("/home/sonata/utils/rcparams.py", "r").read())
 
-centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + 11])
+while True:
+    try:
+        centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + 11])
+        break
+    except Exception as e:
+        #logging.error(traceback.format_exc())
+        print("Encountered "  + str(e) + ", retrying in 30 sec...")
+        time.sleep(5)
+
 BW_EFF = 672
+
+BW = snap_defaults.bw
+NCHANS = 2048
+FOFF = BW / NCHANS
 
 plt.rcParams["font.family"] = "Times New Roman"
 #plt.rcParams["font.size"] = 15
@@ -61,7 +73,8 @@ while True:
 
 
     req = requests.get("http://0.0.0.0:9000/spectrum/" + str(THIS_ANTENNA))
-    data = req.text.split(":")
+    date = req.text.split("|")[0]
+    data = req.text.split("|")[1].split(":")
     SPECTRA = [[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]]
     SPECTRA = np.array(SPECTRA)
     SPEC_PREC = 15
@@ -88,10 +101,6 @@ while True:
     adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
 
 
-    BW = snap_defaults.bw
-    NCHANS = 2048
-    FOFF = BW / NCHANS
-
     freqs = np.arange(centerfreq - BW / 2, centerfreq + BW / 2, FOFF)
 
     ax[0].plot(freqs, 10 * np.log10(SPECTRA[0]), color = 'blue')#, label = 'X-pol')
@@ -99,7 +108,7 @@ while True:
     ax[0].axvline(centerfreq + BW_EFF/2, color = 'black', linestyle='--')
     ax[0].axvline(centerfreq - BW_EFF/2, color = 'black', linestyle='--')
     ax[0].set_ylim(SPEC_MIN, SPEC_MAX)
-    ax[0].set_title("ANT-LO " + antlo)
+    ax[0].set_title("ANT-LO " + antlo)# + ", " + date)
     ax[0].set_xlabel(r"$σ_\mathrm{X}$:" + str(round(adc_std[0])), fontsize = 80)
     ax[0].xaxis.label.set_color('blue')
     #ax[0].set_xlabel("Channel")
@@ -125,7 +134,7 @@ while True:
     imgname = "anttun" + str(THIS_ANTENNA) + ".png"
     tempimgname = "t_anttun" + str(THIS_ANTENNA) + ".png"
 
-    plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 100.0)
+    plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 75.0)
 
     img = cv2.imread(imgdir + tempimgname)
 
@@ -210,4 +219,4 @@ while True:
     ax[0].cla()
     ax[1].cla()
 
-    time.sleep(30)
+    time.sleep(10)

@@ -50,10 +50,6 @@
 						height : 500,
 						hAxis: {
 							title : 'Channel',
-							viewWindow: {
-								min : 0,
-								max : 2048
-							}
 						},
 						vAxis: {
 							title : 'Power (dB)',
@@ -66,8 +62,8 @@
 			req.onreadystatechange = function(){
 				if (this.readyState == 4 && this.status == 200){
 					var text = this.responseText
-					var pol1 = text.split(":")[0]
-					var pol2 = text.split(":")[1]
+					var pol1 = text.split("|")[1].split(":")[0]
+					var pol2 = text.split("|")[1].split(":")[1]
 					pol1 = pol1.split("_")
 					pol2 = pol2.split("_")
 
@@ -182,8 +178,8 @@
 
 		google.charts.setOnLoadCallback(initialize);
 
-		setInterval(updateChartData, 5000)
-		setInterval(updateAdcData, 5000)
+		setInterval(updateChartData, 20000)
+		setInterval(updateAdcData, 20000)
 		setInterval(updateAdcColorData, 5000)
 
 		// Set a callback to run when the Google Visualization API is loaded.

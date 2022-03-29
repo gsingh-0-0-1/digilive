@@ -5,12 +5,108 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Digi-Live</title>
 	<style>
+        #banner{
+            position: relative;
+            width: 100%;
+            padding: 1% 0%;
+            font-family: Courier;
+            font-size: 3vh;
+            border: none;
+            background-color: #aaf;
+            color: #000;
+        }
 
+        #time{
+            position: relative;
+            left: 2%;
+        }
+
+        #connstatus{
+            position: relative;
+            left: 10%;
+        }
+
+        #imgdiv{
+            position: relative;
+            width: 100%;
+        }
+
+        .pagebutton{
+            position: relative;
+            left: 6%;
+            padding: 0.2vh 1vh;
+            border: none;
+            font-family: Courier;
+            font-size: 3vh;
+            background-color: #bbb;
+        }
 	</style>
 </head>
 <body>
+    <div id='banner'>
+        <span id="time">Latest Pull Time:</span>
+        <button class='pagebutton' id='b2' onclick='window.location.href="/1"' >1</button>
+        <button class='pagebutton' id='b1' onclick='window.location.href="/2"' >2</button>
+        <span id="connstatus">observer$ <span id="statspec" ></span>&nbsp;</span>
+    </div>
+    <br>
+    <span id="imgdiv"></span>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
 <script type="text/javascript">
+
+    var socket = io(window.location.pathname)
+
+    document.getElementById("b" + window.location.pathname.replace("/", "")).style.backgroundColor = "#999"
+
+    var connstat = document.getElementById("connstatus")
+
+    var connstatspec = document.getElementById("statspec")
+
+    function updatePullTime(t){
+        document.getElementById("time").textContent = "Latest Pull Time: " + t
+    }
+
+    function checkConnStatus(){
+        if (socket.connected === true){
+            statspec.style.color = "#0a0"
+            statspec.textContent = "CONNECTED"
+        }
+        else{
+            statspec.style.color = "#a00"
+            statspec.textContent = "DISCONNECTED - REFRESH"
+        }
+    }
+    
+    function animateConnStatus(){
+        if (!connstat.textContent.includes("_")){
+            connstat.innerHTML = connstat.innerHTML.replace("&nbsp;", "")
+            connstat.innerHTML += "_"
+        }
+        else{    
+            connstat.innerHTML = connstat.innerHTML.replace("_", "&nbsp;")
+        }
+    }
+
+    setInterval(animateConnStatus, 700)
+
+
+    setInterval(checkConnStatus, 5000)
+
+    socket.on("pulltime", function(t){
+        //alert("time update " + t)
+        updatePullTime(t)
+    })
+
+    var timereq = new XMLHttpRequest;
+    timereq.open("GET", "/lastpulltime")
+    timereq.send()
+    timereq.onreadystatechange = function(){
+        if (this.readyState == 4 && this.status == 200){
+            updatePullTime(this.responseText)
+        }
+    }
+
 	var NUM_ANTENNAS = null;
     var ANT_LIST = []
 	var whichpage = window.location.pathname.replace("/", "") * 1
@@ -26,8 +122,11 @@
     }
 
 
-	var IMAGE_WIDTH = 25;
+	var IMAGE_WIDTH = 22.5;
+    var IMAGE_HEIGHT = 19;
 	var BORDER_WIDTH = 1;
+
+    document.getElementById("imgdiv").style.left = String((100 % IMAGE_WIDTH) / 2) + "%"
 
 	function checkSrc(el){
 		var isLoaded = el.complete && el.naturalHeight !== 0;
@@ -69,7 +168,7 @@
 		}
 		else{
 			resetSrc(el)
-            checkImg(n)
+            checkImg(ANT_LIST[n])
 			setTimeout(function(){
 				resetSrcs(n + 1)
 			}, 100)
@@ -82,6 +181,7 @@
             el.src = "./images/anttun" + String(i) + ".png?t=" + new Date().getTime()
             el.style.position = "relative"
             el.style.width = "calc(" + String(IMAGE_WIDTH) + "% - " + String(2 * BORDER_WIDTH) + "px)"
+            //el.style.height = "calc(" + String(IMAGE_HEIGHT) + "% - " + String(2 * BORDER_WIDTH) + "px)"
             setTimeout(function(){
                 checkImg(i)
             }, 1000)
@@ -103,15 +203,16 @@
 				el.onclick = function(){
 					window.location.replace(window.location.origin + "/chart/" + String(n))
 				}
-				document.body.appendChild(el)
-			}
+				//document.body.appendChild(el)
+			    document.getElementById("imgdiv").appendChild(el)
+            }
 
 			//set image sources
             setSources()
 
 			setInterval(function(){
 				resetSrcs(0)
-			}, 30000)
+			}, 20000)
 		}
 	}
 </script>
