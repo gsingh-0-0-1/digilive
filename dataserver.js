@@ -41,6 +41,12 @@ var ANTLO_COMBOS = []
 
 var PAGES = [1, 2]
 
+FREQ_DATA = [];
+
+for (var i = 0; i < ANTENNAE; i++){
+    FREQ_DATA.push([])
+}
+
 for (var page of PAGES){
     io.of("/" + String(page)).on('connection', (socket) => {
     })
@@ -136,6 +142,10 @@ function reGenerateSpectra(){
 
 app.get('/adcsnapshot/:id', (req, res) => {
 	var id = req.params.id * 1
+    if (SAMPLE_ADC_SNAPSHOTS[id - 1] === undefined){
+        res.send("No data")
+        return
+    }
 	var s = SAMPLE_ADC_SNAPSHOTS[id - 1][0].join("_")
 	s = s + ":"
 	s = s + SAMPLE_ADC_SNAPSHOTS[id - 1][1].join("_")
@@ -150,6 +160,10 @@ app.get('/adcsnapshot/:id', (req, res) => {
 app.get('/spectrum/:id', (req, res) => {
 	var id = req.params.id * 1
     //console.log(SAMPLE_SPECTRA[id - 1])
+    if (SAMPLE_SPECTRA[id - 1] === undefined){
+        res.send("No data")
+        return
+    }
 	var s = SAMPLE_SPECTRA[id - 1][0].join("_")
 	s = s + ":"
 	s = s + SAMPLE_SPECTRA[id - 1][1].join("_")
@@ -181,6 +195,20 @@ app.get("/setminmax/:min/:max", (req, res) => {
         SPEC_MIN = min
     //}
     res.send("OK")
+})
+
+app.get("/setfreqdata/:id/:low/:high/:step", (req, res) => {
+    var id = req.params.id * 1
+    var high = req.params.low * 1
+    var low = req.params.high * 1
+    var step = req.params.step * 1
+    FREQ_DATA[id - 1] = [low, high, step]
+    res.send("OK")
+})
+
+app.get("/getfreqdata/:id/", (req, res) => {
+    var id = req.params.id * 1
+    res.send(String(FREQ_DATA[id - 1][0]) + "_" + String(FREQ_DATA[id - 1][1]) + "_" + String(FREQ_DATA[id - 1][2]))
 })
 
 app.get("/getminmax", (req, res) => {
@@ -225,6 +253,11 @@ app.post("/updatespec/:id", urlencodedParser, (req, res) => {
     SAMPLE_SPECTRA[req.params.id*1 - 1] = data
     //console.log(data)
     res.send("SPEC_OK")
+})
+
+app.get("/updatetime/:time", (req, res) => {
+    PULLTIME = req.params.time
+    res.send("OK")
 })
 
 app.get("/antlo_update/:id/:combo", (req, res) => {

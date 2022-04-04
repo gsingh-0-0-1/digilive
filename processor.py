@@ -60,6 +60,8 @@ BW = snap_defaults.bw
 NCHANS = 2048
 FOFF = BW / NCHANS
 
+WAIT_TIME = 10
+
 plt.rcParams["font.family"] = "Times New Roman"
 #plt.rcParams["font.size"] = 15
 while True:
@@ -70,38 +72,46 @@ while True:
     #x_adc = np.array(x_adc)
     #y_adc = np.array(y_adc)
 
+    skip = False
+
+    try:
+        req = requests.get("http://10.10.1.31:9000/spectrum/" + str(THIS_ANTENNA))
+        req2 = requests.get("http://10.10.1.31:9000/adcsnapshot/" + str(THIS_ANTENNA))
+    except Exception as e:
+        skip = True
+
+    if req.text == "No data" or req2.text == "No data":
+        skip = True
+
+    try:
+        data_spec = req.text.split("|")[1].split(":")
+        data_adc = req2.text.split("|")[1].split(":")
+    except IndexError:
+        skip = True
 
 
-    req = requests.get("http://0.0.0.0:9000/spectrum/" + str(THIS_ANTENNA))
+    if skip:
+        print("Skipping " + str(THIS_ANTENNA) + "...")
+        time.sleep(WAIT_TIME)
+        continue
+
+
     date = req.text.split("|")[0]
-    data = req.text.split("|")[1].split(":")
-    SPECTRA = [[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]]
+    SPECTRA = [[float(el) for el in data_spec[0].split("_")], [float(el) for el in data_spec[1].split("_")]]
     SPECTRA = np.array(SPECTRA)
     SPEC_PREC = 15
     SPEC_MIN, SPEC_MAX = tuple([float(el) for el in requests.get("http://10.10.1.31:9000/getminmax").text.split("_")])
     SPEC_MIN -= 3
     SPEC_MAX += 3
 
-    req = requests.get("http://0.0.0.0:9000/adcsnapshot/" + str(THIS_ANTENNA))
-    data = req.text.split("|")[1].split(":")
-    ADC_SAMPLES = [[float(el) for el in data[0].split("_")], [float(el) for el in data[1].split("_")]]
+    ADC_SAMPLES = [[float(el) for el in data_adc[0].split("_")], [float(el) for el in data_adc[1].split("_")]]
     ADC_SAMPLES = np.array(ADC_SAMPLES)
-
-    '''fullspec = '_'.join([str(round(el, SPEC_PREC)) for el in xx]) + ":" + "_".join([str(round(el, SPEC_PREC)) for el in yy])
-    fulladc = '_'.join([str(round(el, SPEC_PREC)) for el in x_adc]) + ":" + '_'.join([str(round(el, SPEC_PREC)) for el in y_adc])
-    specdata = {'fullspec' : fullspec}
-    adcdata = {'fulladc' : fulladc}
-    try:
-        requests.post("http://10.10.1.31:9000/updatespec/" + str(THIS_ANTENNA), data = specdata, timeout = 0.0001)
-        requests.post("http://10.10.1.31:9000/updateadc/" + str(THIS_ANTENNA), data = adcdata, timeout = 0.0001)
-    except requests.exceptions.ReadTimeout:
-        pass'''
 
 
     adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
 
-
     freqs = np.arange(centerfreq - BW / 2, centerfreq + BW / 2, FOFF)
+    requests.get("http://10.10.1.31:9000/setfreqdata/" + str(THIS_ANTENNA) + "/" + str(freqs[0]) + "/" + str(freqs[-1]) + "/" + str(FOFF) )
 
     ax[0].plot(freqs, 10 * np.log10(SPECTRA[0]), color = 'blue')#, label = 'X-pol')
     ax[0].plot(freqs, 10 * np.log10(SPECTRA[1]), color = 'red')#, label = 'Y-pol')
@@ -210,6 +220,9 @@ while True:
     cv2.imwrite(imgdir + imgname, np.array(newimg))
     #img.save(imgdir + imgname)
 
+    if int(THIS_ANTENNA) == 20:
+        requests.get("http://10.10.1.31:9000/updatetime/" + date)
+
     np.savetxt("./public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
     f = open("./public/colordata/anttun_" + str(THIS_ANTENNA) + ".txt", "w")
     f.write(str(R_VAL_0) + "," + str(G_VAL_0) + "," + str(B_VAL_0))
@@ -219,4 +232,4 @@ while True:
     ax[0].cla()
     ax[1].cla()
 
-    time.sleep(10)
+    time.sleep(WAIT_TIME)

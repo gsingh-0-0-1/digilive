@@ -40,8 +40,11 @@ while True:
         specmin = 10 * np.log10(min(np.amin(xx), np.amin(yy)))
         maxs.append(specmax)
         mins.append(specmin)
-        requests.post("http://10.10.1.31:9000/updatespec/" + str(ind + 1), data = specdata)
-        requests.post("http://10.10.1.31:9000/updateadc/" + str(ind + 1), data = adcdata)
-        print("Pulled " + str(ind) + ": " + rfsoc_hostnames[ind])
+        try:
+            requests.post("http://10.10.1.31:9000/updatespec/" + str(ind + 1), data = specdata)
+            requests.post("http://10.10.1.31:9000/updateadc/" + str(ind + 1), data = adcdata)
+            print("Pulled " + str(ind) + ": " + rfsoc_hostnames[ind])
+        except Exception as e:
+            pass
     requests.get("http://10.10.1.31:9000/setminmax/" + str(min(mins)) + "/" + str(max(maxs)))
     time.sleep(10)

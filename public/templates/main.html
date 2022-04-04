@@ -5,6 +5,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Digi-Live</title>
 	<style>
+        body{
+            background-color: #ddd;
+        }
         #banner{
             position: relative;
             width: 100%;
@@ -45,8 +48,8 @@
 <body>
     <div id='banner'>
         <span id="time">Latest Pull Time:</span>
-        <button class='pagebutton' id='b2' onclick='window.location.href="/1"' >1</button>
-        <button class='pagebutton' id='b1' onclick='window.location.href="/2"' >2</button>
+        <button class='pagebutton' id='b2' onclick='window.location.href="/1"' >B</button>
+        <button class='pagebutton' id='b1' onclick='window.location.href="/2"' >C</button>
         <span id="connstatus">observer$ <span id="statspec" ></span>&nbsp;</span>
     </div>
     <br>
@@ -67,14 +70,20 @@
         document.getElementById("time").textContent = "Latest Pull Time: " + t
     }
 
+    DISCONNECTED = false;
+
     function checkConnStatus(){
         if (socket.connected === true){
             statspec.style.color = "#0a0"
             statspec.textContent = "CONNECTED"
+            if (DISCONNECTED){
+                window.location.reload()
+            }
         }
         else{
             statspec.style.color = "#a00"
             statspec.textContent = "DISCONNECTED - REFRESH"
+            DISCONNECTED = true;
         }
     }
     
@@ -148,12 +157,15 @@
 		}, 200)*/
 	}
 
-    function checkImg(n){
+    function checkImg(n, t = 0){
+        if (t > 3){
+            return
+        }
         var el = getImage(n)
         if (!el.complete || el.naturalHeight === 0){
             resetSrc(el)
             setTimeout(function(){
-                checkImg(n)
+                checkImg(n, t + 1)
             }, 1000)
         }
         else{
@@ -201,7 +213,7 @@
 				el.style.border = String(BORDER_WIDTH) + "px solid black"
 				let n = i;
 				el.onclick = function(){
-					window.location.replace(window.location.origin + "/chart/" + String(n))
+					window.location.href = window.location.origin + "/chart/" + String(n)
 				}
 				//document.body.appendChild(el)
 			    document.getElementById("imgdiv").appendChild(el)

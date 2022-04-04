@@ -4,6 +4,9 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300&display=swap" rel="stylesheet">
+
 	<title>Digi-Live</title>
 	<script>
 		// Load the Visualization API and the corechart package.
@@ -11,24 +14,63 @@
 	</script>
 	<style>
 		body{
-			background-color: #888;
-		}
+            height: 100%;
+            margin: 0;
+            background-repeat: none;
+            background-attachment: fixed;
+			background-image: linear-gradient(to top, #2a2a2a, #222);
+        }
+
+        #xpolbutton{
+            position : fixed;
+            left: 25%;
+            top: 10%;
+            transform : translate(-50%, -50%);
+            font-family : Source Code Pro;
+            padding : 1.5% 1.5%;
+            border: none;
+            font-size: 2vh
+        }
+
+        #ypolbutton{
+            position : fixed;
+            left: 75%;
+            top: 10%;
+            transform : translate(-50%, -50%);
+            font-family: Source Code Pro;
+            padding: 1.5% 1.5%;
+            border: none;
+            font-size: 2vh
+        }
+
+        #mainpagebutton{
+            position: fixed;
+            left: 25%;
+            top: 90%;
+            padding: 1.5% 1.5%;
+            font-family: Source Code Pro;
+            transform: translate(-50%, -50%);
+            font-size: 2vh;
+            background-color: #222;
+            color: #ddd;
+            border: none;
+        }
 	</style>
 </head>
 <body>
 
-	<div style="position: fixed; left: 10%; top: 50%; transform: translate(0%, -50%);" id="chart"></div>
-	<div style="position: fixed; left: 60%; top: 50%; transform: translate(0%, -50%)" id="hist"></div>
+	<div style="position: fixed; left: 10%; top: 50%; transform: translate(0%, -50%); width: 40%; height: 40%" id="chart"></div>
+	<div style="position: fixed; left: 60%; top: 50%; transform: translate(0%, -50%); width: 20%; height: 40%" id="hist"></div>
 
-	<button style="position: fixed; left: 25%; top: 10%; transform: translate(-50%, -50%); font-family: Courier; padding: 2% 2%; border: none" id="xpolbutton">
+    <button id="xpolbutton">
 		X-pol ADC Values
 	</button>
 
-	<button style="position: fixed; left: 75%; top: 10%; transform: translate(-50%, -50%); font-family: Courier; padding: 2% 2%; border: none" id="ypolbutton">
+    <button id="ypolbutton">
 		Y-pol ADC Values
 	</button>
 
-	<button style="position: fixed; left: 25%; top: 90%; padding: 2% 2%; font-family: Courier; transform: translate(-50%, -50%);" onclick="javascript:backHome()">
+	<button id='mainpagebutton' onclick="javascript:backHome()">
 		<< Main Page
 	</button>
 
@@ -41,54 +83,75 @@
 		var THIS_ID = window.location.href.split("/")
 		THIS_ID = THIS_ID[THIS_ID.length - 1] * 1
 
-        var ANTLO = "---"
+        var ANTLO = undefined
+        var SPECDATA = undefined
+        var ADCDATA = undefined
+        var ADC_STDS = undefined
+        var FREQDATA = undefined
+        var FREQMINMAX = undefined
+
+        var chartTextColor = '#ddd'
+        var XPolColor = '#2af'
+        var YPolColor = '#dd2222'
+        var chartBackgroundColor = '#222a2a'
 
 		function updateChartData(){
 			// Set chart options
-			var options = {title : 'Ant-Lo ' + ANTLO + ": Spectrum",
-						width : 1000,
-						height : 500,
+			var options = {title : 'Ant-LO ' + ANTLO + ": Spectrum",
+                        backgroundColor : chartBackgroundColor,
 						hAxis: {
-							title : 'Channel',
+							title : 'Frequency (MHz)',
+                            titleTextStyle : {color : chartTextColor},
+                            textStyle : {color : chartTextColor},
 						},
 						vAxis: {
 							title : 'Power (dB)',
-						}
+                            titleTextStyle : {color : chartTextColor},
+                            textStyle : {color : chartTextColor},
+                            viewWindow: {
+                                min : FREQMINMAX[0],
+                                max : FREQMINMAX[1]
+                            }
+						},
+                        legend: {
+                            textStyle : {color : chartTextColor},
+                        },
+                        series : {
+                            0 : {color : XPolColor},
+                            1 : {color : YPolColor}
+                        },
+                        titleTextStyle : {color : chartTextColor}
 					};
 
-			var req = new XMLHttpRequest;
-			req.open("GET", "/spectrum/" + String(THIS_ID))
-			req.send()
-			req.onreadystatechange = function(){
-				if (this.readyState == 4 && this.status == 200){
-					var text = this.responseText
-					var pol1 = text.split("|")[1].split(":")[0]
-					var pol2 = text.split("|")[1].split(":")[1]
-					pol1 = pol1.split("_")
-					pol2 = pol2.split("_")
+            var low = FREQDATA[0]
+            var high = FREQDATA[1]
+            var step = FREQDATA[2]
 
-					// Create the data table.
-					var data = new google.visualization.DataTable();
-					data.addColumn('number', 'Channel')
-					data.addColumn('number', 'X-pol');
-					data.addColumn('number', 'Y-pol');
+            var data = new google.visualization.DataTable();
+			data.addColumn('number', 'Frequency (MHz)')
+			data.addColumn('number', 'X-pol');
+			data.addColumn('number', 'Y-pol');
 
-					for (var chanidx = 0; chanidx < pol1.length; chanidx++){
-						var values = [chanidx, 10 * Math.log10(pol1[chanidx] * 1), 10 * Math.log10(pol2[chanidx] * 1)]
-						data.addRow(values)
-					}
-					// Instantiate and draw our chart, passing in some options.
-					window['chart'].draw(data, google.charts.Line.convertOptions(options));
-				}
-			}
+			for (var chanidx = 0; chanidx < SPECDATA[0].length; chanidx++){
+			    var values = [low + chanidx * step, 10 * Math.log10(SPECDATA[0][chanidx] * 1), 10 * Math.log10(SPECDATA[1][chanidx] * 1)]
+			    data.addRow(values)
+			}   
+					
+            window['chart'].draw(data, google.charts.Line.convertOptions(options));
 		}
 
 		function updateAdcData(){
-			var options = {title : 'Ant-Lo ' + ANTLO + ": ADC Values Histogram",
+			var options = {title : 'Ant-LO ' + ANTLO + ": ADC Values Histogram",
 						width : 700,
 						height : 500,
+                        backgroundColor : chartBackgroundColor,
+                        color : [XPolColor, YPolColor],
 						hAxis: {
 							title : 'Value',
+                            titleTextStyle: {
+                                color : chartTextColor
+                            },
+                            textStyle : { color : chartTextColor },
 							viewWindow: {
 								min : -8192,
 								max : 8192
@@ -96,40 +159,25 @@
 						},
 						vAxis: {
 							title : 'Count',
-						}
+                            titleTextStyle : {color : chartTextColor},
+                            textStyle : {color : chartTextColor}
+						},
+                        legend: {
+                            textStyle : {color : chartTextColor}
+                        },
+                        titleTextStyle : {color : chartTextColor}
 					};
-
-			var req = new XMLHttpRequest;
-			req.open("GET", "/adcsnapshot/" + String(THIS_ID))
-			req.send()
-			req.onreadystatechange = function(){
-				if (this.readyState == 4 && this.status == 200){
-					var text = this.responseText
-
-					var stds = text.split("|")[0]
-					var stds = stds.split("_")
-
-					var values = text.split("|")[1]
-					var pol1 = values.split(":")[0]
-					var pol2 = values.split(":")[1]
-
-					pol1 = pol1.split("_")
-					pol2 = pol2.split("_")
-
 					// Create the data table.
 					var data = new google.visualization.DataTable();
-					data.addColumn('number', 'X: STD ' + String(Math.round(stds[0])));
-					data.addColumn('number', 'Y: STD ' + String(Math.round(stds[1])));
+					data.addColumn('number', 'X: STD ' + String(Math.round(ADC_STDS[0])));
+					data.addColumn('number', 'Y: STD ' + String(Math.round(ADC_STDS[1])));
 
-					for (var chanidx = 0; chanidx < pol1.length; chanidx++){
-						var values = [pol1[chanidx] * 1, pol2[chanidx] * 1]
+					for (var chanidx = 0; chanidx < ADCDATA[0].length; chanidx++){
+						var values = [ADCDATA[0][chanidx] * 1, ADCDATA[1][chanidx] * 1]
 						data.addRow(values)
 					}
 					// Instantiate and draw our chart, passing in some options.
 					window['hist'].draw(data, options);
-				}
-			}
-
 		}
 
 		function updateAdcColorData(){
@@ -151,7 +199,6 @@
 			var chart = new google.visualization.LineChart(document.getElementById('chart'));
 			window['chart'] = chart
 
-			updateChartData()
 
 		}
 
@@ -159,28 +206,107 @@
 			var adc = new google.visualization.Histogram(document.getElementById('hist'))
 			window['hist'] = adc
 
-			updateAdcData()
 		}
 
+        function checkReadyState(){
+            if (ANTLO == undefined || SPECDATA == undefined || ADCDATA == undefined || FREQDATA == undefined || FREQMINMAX == undefined){
+                return false;
+            }
+            else{
+                updateChartData()
+                updateAdcData()
+            }
+        }
         
         function initialize(){
-            var req = new XMLHttpRequest;
-            req.open("GET", "/antlo/" + String(THIS_ID))
-            req.send()
-            req.onreadystatechange = function(){
-                ANTLO = req.responseText
-                drawChart()
-                setTimeout(function(){
-                    drawHist()
-                })
+            var al_req = new XMLHttpRequest;
+            al_req.open("GET", "/antlo/" + String(THIS_ID))
+            al_req.send()
+            al_req.onreadystatechange = function(){
+                if (this.readyState == 4 && this.status == 200){
+                    ANTLO = this.responseText
+                    checkReadyState()
+                }
+            }
+
+            var spec_req = new XMLHttpRequest;
+            spec_req.open("GET", "/spectrum/" + String(THIS_ID))
+            spec_req.send()
+            spec_req.onreadystatechange = function(){
+                if (this.readyState == 4 && this.status == 200){        
+                    var text = this.responseText
+                    var pol1 = text.split("|")[1].split(":")[0]
+                    var pol2 = text.split("|")[1].split(":")[1]
+                    pol1 = pol1.split("_")
+                    pol2 = pol2.split("_")
+                    SPECDATA = [pol1, pol2]
+                    checkReadyState()
+                }
+            }
+
+            var adc_req = new XMLHttpRequest;
+            adc_req.open("GET", "/adcsnapshot/" + String(THIS_ID))
+            adc_req.send()
+            adc_req.onreadystatechange = function(){
+                if (this.readyState == 4 && this.status == 200){
+                    var text = this.responseText
+
+                    var stds = text.split("|")[0]
+                    var stds = stds.split("_")
+
+                    var values = text.split("|")[1]
+                    var pol1 = values.split(":")[0]
+                    var pol2 = values.split(":")[1]
+
+                    pol1 = pol1.split("_")
+                    pol2 = pol2.split("_")
+
+                    ADCDATA = [pol1, pol2]
+                    ADC_STDS = stds
+                    
+                    checkReadyState()
+                }
+            }
+
+            var chanreq = new XMLHttpRequest;
+            chanreq.open("GET", "/getfreqdata/" + String(THIS_ID))
+            chanreq.send()
+            chanreq.onreadystatechange = function(){
+                if (this.readyState == 4 && this.status == 200){
+                    var spl = this.responseText.split("_")
+                    var low = spl[0] * 1
+                    var high = spl[1] * 1
+                    var step = spl[2] * 1
+                    FREQDATA = [low, high, step]
+
+                    checkReadyState()
+                }
+            }
+
+            var minmaxreq = new XMLHttpRequest;
+            minmaxreq.open("GET", "/getminmax")
+            minmaxreq.send()
+            minmaxreq.onreadystatechange = function(){
+                if (this.readyState == 4 && this.status == 200){
+                    var spl = this.responseText.split("_")
+                    FREQMINMAX = [spl[0] * 1, spl[1] * 1]
+                    
+                    checkReadyState()
+                }
             }
         }
 
-		google.charts.setOnLoadCallback(initialize);
 
-		setInterval(updateChartData, 20000)
-		setInterval(updateAdcData, 20000)
-		setInterval(updateAdcColorData, 5000)
+        google.charts.setOnLoadCallback(function(){
+            drawChart()
+            drawHist()
+            initialize()
+        });
+
+        updateAdcColorData()
+
+		setInterval(initialize, 5000)
+        setInterval(updateAdcColorData, 5000)
 
 		// Set a callback to run when the Google Visualization API is loaded.
 	</script>
