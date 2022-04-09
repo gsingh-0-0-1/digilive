@@ -11,7 +11,9 @@ const server = http.createServer(app)
 
 const io = require('socket.io')(server)
 
-app.use(express.static('public'));
+var DIR = "/home/sonata/gsingh_tests/digilive/"
+
+app.use(express.static(DIR + 'public'));
 
 var jsonParser = bodyParser.json()
 
