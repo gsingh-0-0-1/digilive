@@ -34,8 +34,8 @@ var IDEAL_ADC_STD = HALFRANGE / 8
 var ADC_STD_VAR = IDEAL_ADC_STD * 0.5
 
 
-var SPEC_MAX = 100
-var SPEC_MIN = 0
+var SPEC_MAX = -50
+var SPEC_MIN = -110
 
 var PULLTIME = ''
 
