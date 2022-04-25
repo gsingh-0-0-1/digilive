@@ -37,6 +37,8 @@ HALFRANGE = 2 ** 13
 IDEAL_ADC_STD = HALFRANGE / 8
 ADC_MAX_DEV = 240#IDEAL_ADC_STD * 0.5
 
+NUM_OLD_BOARDS = 11
+
 snap_tab = snap_config.get_ata_snap_tab()
 #rfsoc_hostnames = [el for el in list(snap_tab['snap_hostname']) if 'frb' not in el][THIS_ANTENNA]
 #rfsocs = snap_control.init_snaps([rfsoc_hostnames], load_system_information=True)
@@ -47,7 +49,7 @@ requests.get("http://10.10.1.31:9000/antlo_update/" + str(THIS_ANTENNA) + "/" + 
 
 while True:
     try:
-        centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + 11])
+        centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + NUM_OLD_BOARDS])
         break
     except Exception as e:
         #logging.error(traceback.format_exc())

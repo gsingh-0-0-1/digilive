@@ -1,6 +1,7 @@
 import subprocess
+import os
 
-f = open("/home/sonata/gsingh_tests/digilive/pids.txt", "r")
+f = open(os.environ["DIGILIVE_INFO_DIR"] + "pids.txt", "r")
 d = f.read()
 f.close()
 for pid in d.split("\n"):

@@ -278,8 +278,8 @@
             chanreq.onreadystatechange = function(){
                 if (this.readyState == 4 && this.status == 200){
                     var spl = this.responseText.split("_")
-                    var low = spl[0] * 1
-                    var high = spl[1] * 1
+                    var low = spl[1] * 1
+                    var high = spl[0] * 1
                     var step = spl[2] * 1
                     FREQDATA = [low, high, step]
 

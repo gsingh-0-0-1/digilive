@@ -4,6 +4,7 @@ import numpy as np
 import requests
 import time
 import pandas as pd
+from ATATools.device_lock import set_device_lock, release_device_lock
 
 snap_tab = snap_config.get_ata_snap_tab()
 
@@ -22,7 +23,9 @@ while True:
 
 
         # get ADC values for first RFSoC pipeline
+        set_device_lock(rfsoc_hostnames[ind])
         x_adc, y_adc = rfsocs[ind].adc_get_samples()
+        release_device_lock(rfsoc_hostnames[ind])
         x_adc = np.array(x_adc)
         y_adc = np.array(y_adc)
 

@@ -11,7 +11,7 @@ const server = http.createServer(app)
 
 const io = require('socket.io')(server)
 
-var DIR = "/home/sonata/gsingh_tests/digilive/"
+var DIR = "/home/gsingh/digilive/"
 
 app.use(express.static(DIR + 'public'));
 
@@ -240,12 +240,12 @@ app.post("/updatespec/:id", urlencodedParser, (req, res) => {
     data[0] = data[0].map(Number)
     data[1] = data[1].map(Number)
     var curtime = String(Date()).split("GMT")[0]
-    if (Math.round(ANTENNAE / 2) == req.params.id * 1){
+    /*if (Math.round(ANTENNAE / 2) == req.params.id * 1){
         PULLTIME = curtime
         for (var page of PAGES){
             io.of("/" + String(page)).emit("pulltime", curtime)
         }
-    }
+    }*/
     data.push(curtime)
       
 
@@ -259,6 +259,9 @@ app.post("/updatespec/:id", urlencodedParser, (req, res) => {
 
 app.get("/updatetime/:time", (req, res) => {
     PULLTIME = req.params.time
+    for (var page of PAGES){
+        io.of("/" + String(page)).emit("pulltime", PULLTIME)
+    }
     res.send("OK")
 })
 
@@ -288,7 +291,9 @@ app.get("/:pagenum", (req, res) => {
     res.sendFile("public/templates/main.html", {root: __dirname})
 })
 
-
+app.get("/", (req, res) => {
+    res.sendFile("public/templates/landing.html", {root: __dirname})
+})
 //reGenerateADCSnapshot()
 //reGenerateSpectra()
 

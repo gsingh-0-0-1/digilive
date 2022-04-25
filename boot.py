@@ -1,10 +1,13 @@
+import os
 import subprocess
 import sys
 import time
 
 N_ANTENNAE = 40#int(sys.argv[1])
 
-DIR = "/home/sonata/gsingh_tests/digilive/"
+DIR = os.environ["DIGILIVE_INFO_DIR"]
+if DIR[-1] != '/':
+    DIR = DIR + "/"
 
 webserver_proc = subprocess.Popen(["env","TZ='America/Los_Angeles'", "node", DIR + "dataserver.js", "40"], stdout = subprocess.DEVNULL, stderr = subprocess.STDOUT, cwd = DIR)
 with open(DIR + "webid.txt", "w") as f:

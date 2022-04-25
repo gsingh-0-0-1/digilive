@@ -1,6 +1,7 @@
 import subprocess
+import os
 
-DIR = "/home/sonata/gsingh_tests/digilive/"
+DIR = os.environ["DIGILIVE_INFO_DIR"] 
 
 subprocess.Popen(["python3", DIR + "killprocs.py"])
 

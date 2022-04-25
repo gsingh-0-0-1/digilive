@@ -3,7 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Digi-Live</title>
+	<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300&display=swap" rel="stylesheet">
+    <title>Digi-Live</title>
 	<style>
         body{
             background-color: #ddd;
@@ -12,7 +13,7 @@
             position: relative;
             width: 100%;
             padding: 1% 0%;
-            font-family: Courier;
+            font-family: Source Code Pro;
             font-size: 3vh;
             border: none;
             background-color: #aaf;
@@ -39,17 +40,18 @@
             left: 6%;
             padding: 0.2vh 1vh;
             border: none;
-            font-family: Courier;
+            font-family: Source Code Pro;
             font-size: 3vh;
-            background-color: #bbb;
+            background-color: #999;
         }
 	</style>
 </head>
 <body>
     <div id='banner'>
         <span id="time">Latest Pull Time:</span>
-        <button class='pagebutton' id='b2' onclick='window.location.href="/1"' >B</button>
-        <button class='pagebutton' id='b1' onclick='window.location.href="/2"' >C</button>
+        <button class='pagebutton' id='bh' onclick='window.location.href="/"'>$ cd $HOME&nbsp;</button>
+        <button class='pagebutton' id='b1' onclick='window.location.href="/1"' >B</button>
+        <button class='pagebutton' id='b2' onclick='window.location.href="/2"' >C</button>
         <span id="connstatus">observer$ <span id="statspec" ></span>&nbsp;</span>
     </div>
     <br>
@@ -60,9 +62,10 @@
 
     var socket = io(window.location.pathname)
 
-    document.getElementById("b" + window.location.pathname.replace("/", "")).style.backgroundColor = "#999"
+    document.getElementById("b" + window.location.pathname.replace("/", "")).style.backgroundColor = "#bbb"
 
     var connstat = document.getElementById("connstatus")
+    var homebutton = document.getElementById("bh")
 
     var connstatspec = document.getElementById("statspec")
 
@@ -97,8 +100,21 @@
         }
     }
 
-    setInterval(animateConnStatus, 700)
+    function animateElementCursor(el){
+        if (!el.textContent.includes("_")){
+            el.innerHTML = el.innerHTML.replace("&nbsp;", "")
+            el.innerHTML += "_"
+        }
+        else{
+            el.innerHTML = el.innerHTML.replace("_", "&nbsp;")
+        }
+    }
 
+    //setInterval(animateConnStatus, 700)
+    setInterval(function(){
+        animateElementCursor(connstatus)
+        animateElementCursor(homebutton)
+    }, 700)
 
     setInterval(checkConnStatus, 5000)
 
