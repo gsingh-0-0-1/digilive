@@ -19,13 +19,21 @@ while True:
 
     for ind in range(len(rfsoc_hostnames)):
         # get spectrum for first RFSoC pipeline:
-        xx,yy = rfsocs[ind].spec_read(normalize = True)
-
 
         # get ADC values for first RFSoC pipeline
-        set_device_lock(rfsoc_hostnames[ind])
+        snap_name = rfsoc_hostnames[ind]
+
+        if snap_name.lower().startswith('rfsoc'):
+            # e.g. snap_name "rfsoc2-ctrl-3"
+            # so lock_name = "rfsoc2"
+            lock_name = snap_name[:6]
+        else:
+            lock_name = snap_name
+
+        set_device_lock(lock_name)
         x_adc, y_adc = rfsocs[ind].adc_get_samples()
-        release_device_lock(rfsoc_hostnames[ind])
+        xx,yy = rfsocs[ind].spec_read(normalize = True)
+        release_device_lock(lock_name)
         x_adc = np.array(x_adc)
         y_adc = np.array(y_adc)
 
@@ -44,10 +52,10 @@ while True:
         maxs.append(specmax)
         mins.append(specmin)
         try:
-            requests.post("http://10.10.1.31:9000/updatespec/" + str(ind + 1), data = specdata)
-            requests.post("http://10.10.1.31:9000/updateadc/" + str(ind + 1), data = adcdata)
+            requests.post("http://10.10.1.31:9000/updatespec/" + str(ind + 1), data = specdata, timeout = 2.50)
+            requests.post("http://10.10.1.31:9000/updateadc/" + str(ind + 1), data = adcdata, timeout = 2.50)
             print("Pulled " + str(ind) + ": " + rfsoc_hostnames[ind])
         except Exception as e:
             pass
-    requests.get("http://10.10.1.31:9000/setminmax/" + str(min(mins)) + "/" + str(max(maxs)))
+    requests.get("http://10.10.1.31:9000/setminmax/" + str(min(mins)) + "/" + str(max(maxs)), timeout = 2.50)
     time.sleep(10)

@@ -47,6 +47,8 @@ antlo = snap_tab["ANT_name"][THIS_ANTENNA + 11] + snap_tab["LO"][THIS_ANTENNA + 
 requests.get("http://10.10.1.31:9000/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
 #exec(open("/home/sonata/utils/rcparams.py", "r").read())
 
+print(antlo)
+
 while True:
     try:
         centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + NUM_OLD_BOARDS])
@@ -62,7 +64,7 @@ BW = snap_defaults.bw
 NCHANS = 2048
 FOFF = BW / NCHANS
 
-WAIT_TIME = 10
+WAIT_TIME = 20
 
 plt.rcParams["font.family"] = "Times New Roman"
 #plt.rcParams["font.size"] = 15
