@@ -9,6 +9,17 @@
         body{
             background-color: #ddd;
         }
+
+        .pagebutton{
+            position: relative;
+            left: 3%;
+            padding: 0.2vh 1vh;
+            border: none;
+            font-family: Source Code Pro;
+            font-size: 3vh;
+            background-color: #999;
+        }
+
         #banner{
             position: relative;
             width: 100%;
@@ -27,7 +38,7 @@
 
         #connstatus{
             position: relative;
-            left: 10%;
+            left: 5%;
         }
 
         #imgdiv{
@@ -35,15 +46,14 @@
             width: 100%;
         }
 
-        .pagebutton{
-            position: relative;
-            left: 6%;
-            padding: 0.2vh 1vh;
-            border: none;
-            font-family: Source Code Pro;
-            font-size: 3vh;
-            background-color: #999;
+        #fp{
+            position: fixed;
         }
+
+        #bh{
+            left: 3%;
+        }
+
 	</style>
 </head>
 <body>
@@ -52,6 +62,7 @@
         <button class='pagebutton' id='bh' onclick='window.location.href="/"'>$ cd $HOME&nbsp;</button>
         <button class='pagebutton' id='b1' onclick='window.location.href="/1"' >B</button>
         <button class='pagebutton' id='b2' onclick='window.location.href="/2"' >C</button>
+        <button class='pagebutton' id-'fp' onclick='resetSrcs(0);'>Re-Fetch</button>
         <span id="connstatus">observer$ <span id="statspec" ></span>&nbsp;</span>
     </div>
     <br>
@@ -151,7 +162,7 @@
     }
 
 
-	var IMAGE_WIDTH = 22.5;
+	var IMAGE_WIDTH = 22;
     var IMAGE_HEIGHT = 19;
 	var BORDER_WIDTH = 1;
 

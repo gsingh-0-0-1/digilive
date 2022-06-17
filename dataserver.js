@@ -45,6 +45,8 @@ var PAGES = [1, 2]
 
 FREQ_DATA = [];
 
+process.env.TZ = "America/Los_Angeles"
+
 for (var i = 0; i < ANTENNAE; i++){
     FREQ_DATA.push([])
 }
