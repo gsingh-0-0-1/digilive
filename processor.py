@@ -37,14 +37,16 @@ HALFRANGE = 2 ** 13
 IDEAL_ADC_STD = HALFRANGE / 8
 ADC_MAX_DEV = 240#IDEAL_ADC_STD * 0.5
 
-NUM_OLD_BOARDS = 11
+NUM_OLD_BOARDS = 12
+
+PORT = '9000'
 
 snap_tab = snap_config.get_ata_snap_tab()
 #rfsoc_hostnames = [el for el in list(snap_tab['snap_hostname']) if 'frb' not in el][THIS_ANTENNA]
 #rfsocs = snap_control.init_snaps([rfsoc_hostnames], load_system_information=True)
 
-antlo = snap_tab["ANT_name"][THIS_ANTENNA + 11] + snap_tab["LO"][THIS_ANTENNA + 11].upper()
-requests.get("http://10.10.1.31:9000/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
+antlo = snap_tab["ANT_name"][THIS_ANTENNA + NUM_OLD_BOARDS - 1] + snap_tab["LO"][THIS_ANTENNA + NUM_OLD_BOARDS - 1].upper()
+requests.get("http://10.10.1.31:" + PORT + "/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
 #exec(open("/home/sonata/utils/rcparams.py", "r").read())
 
 print(antlo)
@@ -79,8 +81,8 @@ while True:
     skip = False
 
     try:
-        req = requests.get("http://10.10.1.31:9000/spectrum/" + str(THIS_ANTENNA))
-        req2 = requests.get("http://10.10.1.31:9000/adcsnapshot/" + str(THIS_ANTENNA))
+        req = requests.get("http://10.10.1.31:" + PORT + "/spectrum/" + str(THIS_ANTENNA))
+        req2 = requests.get("http://10.10.1.31:" + PORT + "/adcsnapshot/" + str(THIS_ANTENNA))
     except Exception as e:
         skip = True
 
@@ -104,7 +106,7 @@ while True:
     SPECTRA = [[float(el) for el in data_spec[0].split("_")], [float(el) for el in data_spec[1].split("_")]]
     SPECTRA = np.array(SPECTRA)
     SPEC_PREC = 15
-    SPEC_MIN, SPEC_MAX = tuple([float(el) for el in requests.get("http://10.10.1.31:9000/getminmax").text.split("_")])
+    SPEC_MIN, SPEC_MAX = tuple([float(el) for el in requests.get("http://10.10.1.31:" + PORT + "/getminmax").text.split("_")])
     SPEC_MIN -= 3
     SPEC_MAX += 3
 
@@ -115,7 +117,7 @@ while True:
     adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
 
     freqs = np.arange(centerfreq - BW / 2, centerfreq + BW / 2, FOFF)
-    requests.get("http://10.10.1.31:9000/setfreqdata/" + str(THIS_ANTENNA) + "/" + str(freqs[0]) + "/" + str(freqs[-1]) + "/" + str(FOFF) )
+    requests.get("http://10.10.1.31:" + PORT + "/setfreqdata/" + str(THIS_ANTENNA) + "/" + str(freqs[0]) + "/" + str(freqs[-1]) + "/" + str(FOFF) )
 
     ax[0].plot(freqs, 10 * np.log10(SPECTRA[0]), color = 'blue')#, label = 'X-pol')
     ax[0].plot(freqs, 10 * np.log10(SPECTRA[1]), color = 'red')#, label = 'Y-pol')
@@ -225,7 +227,7 @@ while True:
     #img.save(imgdir + imgname)
 
     if int(THIS_ANTENNA) == 20:
-        requests.get("http://10.10.1.31:9000/updatetime/" + date)
+        requests.get("http://10.10.1.31:" + PORT + "/updatetime/" + date)
 
     np.savetxt("./public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
     f = open("./public/colordata/anttun_" + str(THIS_ANTENNA) + ".txt", "w")

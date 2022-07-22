@@ -85,7 +85,7 @@
     }
 
     DISCONNECTED = false;
-
+    SERVER_REBOOTING = false
     function checkConnStatus(){
         if (socket.connected === true){
             statspec.style.color = "#0a0"
@@ -94,9 +94,14 @@
                 window.location.reload()
             }
         }
-        else{
-            statspec.style.color = "#a00"
+        if (socket.connected === false && !SERVER_REBOOTING){
+            statspec.style.color = "#fa0"
             statspec.textContent = "DISCONNECTED - REFRESH"
+            DISCONNECTED = true;
+        }
+        if (SERVER_REBOOTING){
+            statspec.style.color = "#f00"
+            statspec.textContent = "SERVER REBOOTING..."
             DISCONNECTED = true;
         }
     }
@@ -132,6 +137,10 @@
     socket.on("pulltime", function(t){
         //alert("time update " + t)
         updatePullTime(t)
+    })
+
+    socket.on("server_reboot", function(){
+        SERVER_REBOOTING = true;
     })
 
     var timereq = new XMLHttpRequest;

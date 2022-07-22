@@ -11,6 +11,8 @@ const server = http.createServer(app)
 
 const io = require('socket.io')(server)
 
+const child_process = require('child_process');
+
 var DIR = "/home/gsingh/digilive/"
 
 app.use(express.static(DIR + 'public'));
@@ -58,8 +60,8 @@ for (var page of PAGES){
 
 //utility functions
 function stdDev(array){
-	const n = array.length
-	const mean = array.reduce((a, b) => a + b) / n
+	var n = array.length
+	var mean = array.reduce((a, b) => a + b) / n
 	return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
 }
 
@@ -142,6 +144,28 @@ function reGenerateSpectra(){
 			}
 		}
 	}
+}
+
+function checkPullTime(){
+    var t = new Date().getTime()
+    
+    if (PULLTIME.includes("WAIT")){
+        return
+    }
+    var pull = Date.parse(PULLTIME)
+    
+    var diff = (t - pull) / 1000
+    console.log(diff)
+    if (diff > 300){
+        for (var page of PAGES){
+            io.of("/" + String(page)).emit("server_reboot")
+        }
+        child_process.exec('python3 killswitch.py; python3 boot.py', (error, stdout, stderr) => {
+            console.log(error)
+            console.log(stdout)
+            console.log(stderr)
+        })
+    }
 }
 
 app.get('/adcsnapshot/:id', (req, res) => {
@@ -301,6 +325,8 @@ app.get("/", (req, res) => {
 
 setInterval(reGenerateADCSnapshot, 10000)
 //setInterval(reGenerateSpectra, 10000)
+
+setInterval(checkPullTime, 1000 * 1)
 
 server.listen(port, '0.0.0.0')
 //app.listen(port, '0.0.0.0')
