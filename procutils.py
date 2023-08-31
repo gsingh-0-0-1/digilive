@@ -13,114 +13,89 @@ from SNAPobs import snap_defaults
 from SNAPobs import snap_control
 from SNAPobs import snap_config
 
-configfile = open("config.txt", "r")
-configdata = configfile.read().split("\n")
-configfile.close()
-
-CONFIG_FONT = configdata[0]
-
-matplotlib.use('agg')
-
-matplotlib.rcParams.update({'font.size' : 27})
-#matplotlib.rcParams.update({'axes.titlesize' : 30})
 
 
-THIS_ANTENNA = int(sys.argv[1])
-
-fig, ax = plt.subplots(1, 2, 
-				gridspec_kw={
-                   'width_ratios': [2, 1]
-                   },
-                figsize = (17, 4.5))
-
-HALFRANGE = 2 ** 13
-IDEAL_ADC_STD = HALFRANGE / 8
-ADC_MAX_DEV = 240#IDEAL_ADC_STD * 0.5
-
-NUM_OLD_BOARDS = 12
-
-PORT = '9000'
-
-snap_tab = snap_config.get_ata_snap_tab()
-#rfsoc_hostnames = [el for el in list(snap_tab['snap_hostname']) if 'frb' not in el][THIS_ANTENNA]
-#rfsocs = snap_control.init_snaps([rfsoc_hostnames], load_system_information=True)
-
-antlo = snap_tab["ANT_name"][THIS_ANTENNA + NUM_OLD_BOARDS - 1] + snap_tab["LO"][THIS_ANTENNA + NUM_OLD_BOARDS - 1].upper()
-requests.get("http://10.10.1.31:" + PORT + "/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
-#exec(open("/home/sonata/utils/rcparams.py", "r").read())
-
-print(antlo)
-
+'''
 while True:
     try:
-        centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + NUM_OLD_BOARDS])
+        centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA + NUM_OLD_BOARDS - 1])
         break
     except Exception as e:
-        #logging.error(traceback.format_exc())
-        print("Encountered "  + str(e) + ", retrying in 30 sec...")
+        print("PROC " + str(THIS_ANTENNA) + ": Encountered "  + str(e) + ", retrying in 30 sec...")
+        print(repr(e))
         time.sleep(5)
+'''
 
-BW_EFF = 672
+def gen_antlo_img(x_adc, y_adc, xx, yy, this_antlo_num):
 
-BW = snap_defaults.bw
-NCHANS = 2048
-FOFF = BW / NCHANS
+    configfile = open("config.txt", "r")
+    configdata = configfile.read().split("\n")
+    configfile.close()
 
-WAIT_TIME = 20
+    CONFIG_FONT = configdata[0]
 
-plt.rcParams["font.family"] = "Times New Roman"
-#plt.rcParams["font.size"] = 15
-while True:
+    matplotlib.use('agg')
 
-    #xx,yy = rfsocs[0].spec_read(normalize = True)
-
-    #x_adc, y_adc = rfsocs[0].adc_get_samples()
-    #x_adc = np.array(x_adc)
-    #y_adc = np.array(y_adc)
-
-    skip = False
-
-    try:
-        req = requests.get("http://10.10.1.31:" + PORT + "/spectrum/" + str(THIS_ANTENNA))
-        req2 = requests.get("http://10.10.1.31:" + PORT + "/adcsnapshot/" + str(THIS_ANTENNA))
-    except Exception as e:
-        skip = True
-
-    if req.text == "No data" or req2.text == "No data":
-        skip = True
-
-    try:
-        data_spec = req.text.split("|")[1].split(":")
-        data_adc = req2.text.split("|")[1].split(":")
-    except IndexError:
-        skip = True
+    matplotlib.rcParams.update({'font.size' : 27})
+    #matplotlib.rcParams.update({'axes.titlesize' : 30})
 
 
-    if skip:
-        print("Skipping " + str(THIS_ANTENNA) + "...")
-        time.sleep(WAIT_TIME)
-        continue
+    THIS_ANTENNA = this_antlo_num
+
+    fig, ax = plt.subplots(1, 2,
+                                    gridspec_kw={
+                       'width_ratios': [2, 1]
+                       },
+                    figsize = (17, 4.5))
+
+    HALFRANGE = 2 ** 13
+    IDEAL_ADC_STD = HALFRANGE / 8
+    ADC_MAX_DEV = 240#IDEAL_ADC_STD * 0.5
+
+    NUM_OLD_BOARDS = 12
+
+    PORT = '8081'
+
+    snap_tab = snap_config.get_ata_snap_tab()
+    snap_tab = snap_tab[snap_tab['snap_hostname'].str.contains("rfsoc")]
+
+    snap_tab = snap_tab.reset_index()
+    rfsoc_hostnames = [el for el in list(snap_tab['snap_hostname']) if 'frb' not in el][THIS_ANTENNA]
+    #rfsocs = snap_control.init_snaps([rfsoc_hostnames], load_system_information=True)
 
 
-    date = req.text.split("|")[0]
-    SPECTRA = [[float(el) for el in data_spec[0].split("_")], [float(el) for el in data_spec[1].split("_")]]
-    SPECTRA = np.array(SPECTRA)
-    SPEC_PREC = 15
-    SPEC_MIN, SPEC_MAX = tuple([float(el) for el in requests.get("http://10.10.1.31:" + PORT + "/getminmax").text.split("_")])
-    SPEC_MIN -= 3
-    SPEC_MAX += 3
 
-    ADC_SAMPLES = [[float(el) for el in data_adc[0].split("_")], [float(el) for el in data_adc[1].split("_")]]
-    ADC_SAMPLES = np.array(ADC_SAMPLES)
+    centerfreq = ata_control.get_sky_freq(lo = snap_tab["LO"][THIS_ANTENNA])
+    
+    antlo = snap_tab["ANT_name"][THIS_ANTENNA] + snap_tab["LO"][THIS_ANTENNA].upper()
+    #requests.get("http://10.10.1.31:" + PORT + "/antlo_update/" + str(THIS_ANTENNA) + "/" + antlo)
+    #exec(open("/home/sonata/utils/rcparams.py", "r").read())
 
+    print(antlo)
+
+    device_name = rfsoc_hostnames[0].split("-")[0]
+
+    BW_EFF = 672
+    
+    BW = snap_defaults.bw
+    NCHANS = 2048
+    FOFF = BW / NCHANS
+
+    plt.rcParams["font.family"] = "serif"
+
+    ADC_SAMPLES = [x_adc, y_adc]
+    SPECTRA = [xx, yy]
+
+    SPEC_MIN = -120
+    SPEC_MAX = -55
 
     adc_std = [np.std(ADC_SAMPLES[0]), np.std(ADC_SAMPLES[1])]
 
     freqs = np.arange(centerfreq - BW / 2, centerfreq + BW / 2, FOFF)
-    requests.get("http://10.10.1.31:" + PORT + "/setfreqdata/" + str(THIS_ANTENNA) + "/" + str(freqs[0]) + "/" + str(freqs[-1]) + "/" + str(FOFF) )
+    # requests.get("http://10.10.1.31:" + PORT + "/setfreqdata/" + str(THIS_ANTENNA) + "/" + str(freqs[0]) + "/" + str(freqs[-1]) + "/" + str(FOFF) )
 
-    ax[0].plot(freqs, 10 * np.log10(SPECTRA[0]), color = 'blue')#, label = 'X-pol')
-    ax[0].plot(freqs, 10 * np.log10(SPECTRA[1]), color = 'red')#, label = 'Y-pol')
+    ax[0].plot(freqs, SPECTRA[0], color = 'blue')#, label = 'X-pol')
+    ax[0].plot(freqs, SPECTRA[1], color = 'red')#, label = 'Y-pol')
     ax[0].axvline(centerfreq + BW_EFF/2, color = 'black', linestyle='--')
     ax[0].axvline(centerfreq - BW_EFF/2, color = 'black', linestyle='--')
     ax[0].set_ylim(SPEC_MIN, SPEC_MAX)
@@ -150,7 +125,7 @@ while True:
     imgname = "anttun" + str(THIS_ANTENNA) + ".png"
     tempimgname = "t_anttun" + str(THIS_ANTENNA) + ".png"
 
-    plt.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 75.0)
+    fig.savefig(imgdir + tempimgname, bbox_inches = "tight", dpi = 75.0)
 
     img = cv2.imread(imgdir + tempimgname)
 
@@ -226,8 +201,8 @@ while True:
     cv2.imwrite(imgdir + imgname, np.array(newimg))
     #img.save(imgdir + imgname)
 
-    if int(THIS_ANTENNA) == 20:
-        requests.get("http://10.10.1.31:" + PORT + "/updatetime/" + date)
+    #if int(THIS_ANTENNA) == 20:
+    #    requests.get("http://10.10.1.31:" + PORT + "/updatetime/" + date)
 
     np.savetxt("./public/data/std_anttun_" + str(THIS_ANTENNA) + ".txt", np.array(adc_std), fmt = "%f")
     f = open("./public/colordata/anttun_" + str(THIS_ANTENNA) + ".txt", "w")
@@ -238,4 +213,8 @@ while True:
     ax[0].cla()
     ax[1].cla()
 
-    time.sleep(WAIT_TIME)
+    plt.close(fig)
+    #plt.clf()
+    #plt.close()
+
+
