@@ -128,7 +128,7 @@
         function setAntloButtonText(n){
             var b = document.getElementById('antlo' + String(n))
             var req = new XMLHttpRequest;
-            req.open("GET", "/antlo/" + String(n))
+            req.open("GET", "/antlo/" + String(n - 1))
             req.send()
             req.onreadystatechange = function(){
                 if (this.readyState == 4 && this.status == 200){
